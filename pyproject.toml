@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "brev-cli"
+version = "0.1.0"
+description = "The CLI for Brev.Dev!"
+authors = ["nader <nader+cli@brev.dev>", "alec <alec+cli@brev.dev>"]
+license = "MIT"
+homepage = "https://brev.dev"
+documentation = "http://docs.brev.dev"
+include = ["static/*"]
+
+
+[tool.poetry.scripts]
+brev = "brev_cli.main:cli"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+click = "^7.1.2"
+pyfiglet = "^0.8.post1"
+pyyaml = "^5.3.1"
+requests = "^2.24.0"
+python-jose = "^3.2.0"
+cotter = {git = "https://github.com/theFong/python-sdk.git"}
+
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
