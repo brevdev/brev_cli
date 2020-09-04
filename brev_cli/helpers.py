@@ -759,6 +759,7 @@ def add(type,name):
             click.secho(f"Adding variable {name}", fg="green")
             spin.start()
             response = add_variable(name, value)
+            create_variables_file(get_active_project()['name'],get_active_project()['id'])
             spin.start()
         elif type == "endpoint":
             click.secho(f"Adding endpoint {name}", fg="green")
