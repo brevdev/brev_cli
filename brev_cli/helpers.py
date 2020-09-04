@@ -425,7 +425,6 @@ def get_active_project():
 
 def pull(entire_dir=False):
     click.echo(click.style("... overriding your local with remote", fg="yellow"))
-    print("entire dir2: ", entire_dir)
     
     create_root_dir()
 

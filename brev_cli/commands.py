@@ -109,7 +109,6 @@ def override(location, entire_dir=False):
 
 
 def pull(entire_dir=False):
-    print("entire dir1: ", entire_dir)
     helpers.pull(entire_dir=entire_dir)
 
 
