@@ -364,6 +364,20 @@ def create_new_project(project_name):
     response = BrevAPI(config.api_url).create_project(project_name)
     return response
 
+def update_module(source, project_id=None):
+    # fetch modules for project id
+    if project_id == None:
+        project_id = get_active_project()['id']
+    
+    response = BrevAPI(config.api_url).get_modules()
+    
+    # get matched module
+    module = [m for m in response['modules'] if m['project_id']==project_id][0]
+    
+    # update the module
+    response = BrevAPI(config.api_url).update_module(module['id'], source)
+
+    return response
 
 def create_variables_file(project_name, project_id):
     variables = BrevAPI(config.api_url).get_variables(project_id)
@@ -487,6 +501,24 @@ def push(entire_dir=False):
                 except:
                     # the file might not exist locally.
                     pass
+            ## udpate shared code. 1 per project (as of this writing)
+            try: 
+                local_file = open(
+                    f"{root}/BrevDev/{project}/shared.py", "r"
+                )
+                shared_code = local_file.read()
+                local_file.close()
+                update_module(source=shared_code)
+                click.secho(
+                    f"🥞 ~/BrevDev/{project}/shared.py has been pushed! ",
+                    fg="bright_green",
+                )
+            except:
+                click.secho(
+                    f"Could not update ~/BrevDev/{project}/shared.py, it might contain a bug.",
+                    fg="yellow",
+                )                
+
     except requests.exceptions.HTTPError:
         click.secho(
             f"Could not fetch from remote. Please check your internet.", fg="bright_red"
@@ -572,6 +604,13 @@ def run(endpoint,httptype,body,args,stale):
         except:
             # spin.stop()
             click.secho("Couldn't update endpoint.", fg="bright_red")
+
+        try:
+            #update shared code
+            pass
+        except:
+            click.secho("Couldn't update shared code.", fg="bright_red")
+
 
     
     if httptype == "GET":

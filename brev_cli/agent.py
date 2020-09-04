@@ -154,10 +154,16 @@ class BrevAPI:
         return resp.json()
 
     def get_modules(self):
-        url = self.make_prefixed_domain(f"/module")
-
+        url = self.make_prefixed_domain(f"module")
+        
         resp = self.make_secure_request(self.requests.get, url)
 
+        return resp.json()
+
+    def update_module(self, module_id, source):
+        url = self.make_prefixed_domain(f"/module/{module_id}")
+        args = {"source": source}
+        resp = self.make_secure_request(self.requests.put, url, json=args)
         return resp.json()
 
     def update_endpoint(

@@ -8,6 +8,11 @@ def cli():
     """\b
     Welcome to BrevDev 🥞
 
+    This project is in alpha. If you run into any bugs or issues, please just text us directly:
+    (415) 818-0207
+
+    (you can try calling, no promises.)
+
     """
     pass
 
