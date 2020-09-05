@@ -379,15 +379,17 @@ def create_new_project(project_name):
     return response
 
 def update_module(source, project_id=None):
-    # fetch modules for project id
     if project_id == None:
         project_id = get_active_project()['id']
     
-    response = BrevAPI(config.api_url).get_modules()
+    try: 
+        modules = get_modules() # try modules.json first
+    except:
+        # if none, then fetch
+        modules = get_modules(write=True)
     
     # get matched module
-    module = [m for m in response['modules'] if m['project_id']==project_id][0]
-    
+    module = [m for m in modules if m['project_id']==project_id][0]
     # update the module
     response = BrevAPI(config.api_url).update_module(module['id'], source)
 
