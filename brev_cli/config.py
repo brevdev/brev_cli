@@ -26,6 +26,6 @@ class Prod:
     cotter_api_key_id = "19024767-a0b2-4221-8faa-ef116dc853d0"
 
 
-config = Prod
+config = Dev
 
 logger.setLevel(config.log_level)

@@ -147,9 +147,9 @@ def get_projects(write=False):
             file.close()
             return projects["projects"]
     else:
-        with open(f"{root}/.brev/projects.json", "r") as myfile:
-            projects = json.loads(myfile.read())
-            myfile.close()
+        with open(f"{root}/.brev/projects.json", "r") as file:
+            projects = json.loads(file.read())
+            file.close()
             return projects
 
 def add_endpoint(name):
@@ -324,10 +324,24 @@ def remove_endpoint_file(endpoint, project):
             fg="green",
         )
 
+def get_modules(write=False):
+    if write:
+        modules = BrevAPI(config.api_url).get_modules()
+        with open(f"{root}/.brev/modules.json", "w") as file:
+            file.write(json.dumps(modules["modules"]))
+            file.close()
+            return modules["modules"]
+    else:
+        with open(f"{root}/.brev/modules.json", "r") as file:
+            modules = json.loads(file.read())
+            file.close()
+            return modules
 
-def create_module_file(project_name, project_id):
-    modules = BrevAPI(config.api_url).get_modules()
-    module = [m for m in modules["modules"] if m["project_id"] == project_id]
+
+
+def create_module_file(project_name, project_id, write=False):
+    modules = get_modules(write=write)
+    module = [m for m in modules if m["project_id"] == project_id]
     if len(module) == 0:
         return
     module = module[0]
@@ -453,7 +467,7 @@ def pull(entire_dir=False):
         readme_contents += f"Project: {project}\n"
         project_id = [p["id"] for p in projects if p["name"]==project][0]
         create_variables_file(project, project_id)
-        create_module_file(project, project_id)
+        create_module_file(project, project_id, write=True)
 
         numEPs = 0
         if project in endpoints.keys():
@@ -587,10 +601,20 @@ def run(endpoint,httptype,body,args,stale):
         click.secho("The file doesn't exist locally. Proceeding to run from remote", fg="yellow")
         stale = True
 
+    try:
+        module_file = open(
+            f"{root}/BrevDev/{get_active_project()['name']}/shared.py", "r"
+        )
+        shared_code = module_file.read()
+        module_file.close()
+    except:
+        click.secho("The file doesn't exist locally. Proceeding to run from remote", fg="yellow")
+        stale = True
+
     if not stale == True: 
         try:
             spin.start()
-            click.echo("Updating endpoint before running remote ...")
+            click.echo("Updating endpoint/shared code before running remote ...")
             agent.BrevAPI(config.api_url).update_endpoint(
                 code=local_code,
                 name=ep["name"],
@@ -599,15 +623,18 @@ def run(endpoint,httptype,body,args,stale):
                 methods=ep["methods"],
                 uri=ep["uri"],
             )
-            spin.stop()
             click.echo("endpoint updated!")
+            # spin.stop()
+
         except:
             # spin.stop()
             click.secho("Couldn't update endpoint.", fg="bright_red")
 
         try:
-            #update shared code
-            pass
+            # spin.start()
+            update_module(shared_code, get_active_project()['id'])
+            click.echo("shared code updated!")
+            spin.stop()
         except:
             click.secho("Couldn't update shared code.", fg="bright_red")
 
@@ -780,7 +807,7 @@ def new(type,name):
             set_active_project(response['project'])
             create_project_dir(response['project']['name'])
             create_variables_file(response['project']['name'], response['project']['id'])
-            create_module_file(response['project']['name'], response['project']['id'])
+            create_module_file(response['project']['name'], response['project']['id'], write=True)
             click.secho(f"{type} {name} created successfully.", fg="bright_green")
     except:
         spin.stop()
