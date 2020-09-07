@@ -46,7 +46,10 @@ class BrevAPI:
         return resp
 
     def make_prefixed_domain(self, url):
-        return f"{self.domain}/_api/{url}"
+        if '?' in url:
+            return f"{self.domain}/_api/{url}&utm_source=cli"
+        else:
+            return f"{self.domain}/_api/{url}?utm_source=cli"
 
     def authenticate(self, email, password):
         url = self.make_prefixed_domain("_auth/login")
@@ -58,9 +61,7 @@ class BrevAPI:
 
     def get_endpoints(self):
         url = self.make_prefixed_domain("_endpoint")
-
         resp = self.make_secure_request(self.requests.get, url)
-
         return resp.json()
 
     def get_logs(self, type, id):
