@@ -828,14 +828,13 @@ def add(type,name):
             spin.start()
             response = add_variable(name, value)
             create_variables_file(get_active_project()['name'],get_active_project()['id'])
-            spin.start()
+            spin.stop()
         elif type == "endpoint":
             click.secho(f"Adding endpoint {name}", fg="green")
             spin.start()
             response = add_endpoint(name)
             spin.stop()
-
-        click.secho(f"{type} {name} adding successfully.", fg="bright_green")
+        click.secho(f"{type} {name} added successfully.", fg="bright_green")
     except:
         spin.stop()
         click.secho(f"An error occured adding {type} {name}.", fg="bright_red")
