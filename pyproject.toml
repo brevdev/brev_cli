@@ -19,7 +19,8 @@ pyfiglet = "^0.8.post1"
 pyyaml = "^5.3.1"
 requests = "^2.24.0"
 python-jose = "^3.2.0"
-cotter = "^0.0.5"
+cotter = {git = "https://github.com/theFong/python-sdk.git"}
+
 
 
 [tool.poetry.dev-dependencies]
