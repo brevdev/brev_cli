@@ -27,14 +27,14 @@ class BrevAPI(agent.BrevAPI):
             click.echo(
                 click.style("Seems like you're not initialized:", fg="red")
                 + click.style(
-                    "Would you like to set up your local Brev directory?",
+                    "Please login with 'brev login' or create an account at app.brev.dev",
                     fg="green",
                 ),
             )
-            res = yes_no_prompt()
-            if res:
-                init_home()
-                pull(entire_dir=True)
+            # res = yes_no_prompt()
+            # if res:
+            #     init_home()
+            #     pull(entire_dir=True)
 
         def should_login_callback():
             click.echo(
@@ -126,51 +126,62 @@ def format_endpoint_data(endpoints, projects):
     return output
 
 
-def get_endpoints(write):
+def get_endpoints(write=False, init=False, custom_dir=None):
+    
+    dir = get_active_project_dir() if custom_dir==None else custom_dir
+    
+    # if initializing: just create the file with an empty list
+    if init:
+        with open(f"{dir}/.brev/endpoints.json", "w") as file:
+            file.write(json.dumps([]))
+            file.close()
+    
     # make a fetch
     projects = BrevAPI(config.api_url).get_projects()
     endpoints = BrevAPI(config.api_url).get_endpoints()
+    
+    # organize data to list of endpoints
+    activeProject = get_active_project(custom_dir=dir)
+    eps = [e for e in endpoints['endpoints'] if e['project_id']==activeProject['id']]
     if write:
-        with open(f"{root}/.brev/endpoints.json", "w") as file:
-            file.write(json.dumps(endpoints["endpoints"]))
+        with open(f"{dir}/.brev/endpoints.json", "w") as file:
+            file.write(json.dumps(eps))
             file.close()
-        with open(f"{root}/.brev/projects.json", "w") as file:
-            file.write(json.dumps(projects["projects"]))
-            file.close()
-    return format_endpoint_data(endpoints["endpoints"], projects["projects"])
+    
+    return eps
 
-def get_projects(write=False):
-    if write:
-        projects = BrevAPI(config.api_url).get_projects()
-        with open(f"{root}/.brev/projects.json", "w") as file:
-            file.write(json.dumps(projects["projects"]))
-            file.close()
-            return projects["projects"]
-    else:
-        with open(f"{root}/.brev/projects.json", "r") as file:
-            projects = json.loads(file.read())
-            file.close()
-            return projects
+def create_projects_file(name=None, custom_dir=None):
+    dir = get_active_project_dir() if custom_dir==None else custom_dir
+    projects = BrevAPI(config.api_url).get_projects()
+    matchedProject = [p for p in projects["projects"] if p['name']==name]
+    with open(f"{dir}/.brev/projects.json", "w") as file:
+        file.write(json.dumps(matchedProject[0]))
+        file.close()
+        return matchedProject[0]
+
 
 def add_endpoint(name):
     endpoints = []
-    with open(f"{root}/.brev/endpoints.json", "r") as file:
+    dir = get_active_project_dir()
+    with open(f"{dir}/.brev/endpoints.json", "r") as file:
         endpoints = json.loads(file.read())
 
     endpoint = BrevAPI(config.api_url).add_endpoint(
         name, get_active_project()["id"]
     )["endpoint"]
     endpoints.append(endpoint)
-    with open(f"{root}/.brev/endpoints.json", "w") as file:
+    with open(f"{dir}/.brev/endpoints.json", "w") as file:
         file.write(json.dumps(endpoints))
         file.close()
-    create_endpoint_file(endpoint, get_active_project()["name"])
+    create_endpoint_file(endpoint, get_active_project()["name"] ,dir)
     return endpoint
 
 
 def remove_endpoint(id):
+
+    dir = get_active_project_dir()
     endpoints = []
-    with open(f"{root}/.brev/endpoints.json", "r") as file:
+    with open(f"{dir}/.brev/endpoints.json", "r") as file:
         endpoints = json.loads(file.read())
 
     endpoint = BrevAPI(config.api_url).remove_endpoint(id)
@@ -178,36 +189,21 @@ def remove_endpoint(id):
     updated_endpoints = [e for e in endpoints if not e["id"] == id]
     removedEP = [e for e in endpoints if e["id"] == id]
 
-    with open(f"{root}/.brev/endpoints.json", "w") as file:
+    with open(f"{dir}/.brev/endpoints.json", "w") as file:
         file.write(json.dumps(updated_endpoints))
         file.close()
     remove_endpoint_file(removedEP[0], get_active_project()["name"])
     return endpoint
 
-def get_project_list():
-    with open(f"{root}/.brev/projects.json", "r") as myfile:
-        projects = json.loads(myfile.read())
-        myfile.close()
-        return [p["name"] for p in projects]
-
-
 def get_endpoint_list():
-    active_project = get_active_project()["id"]
-    with open(f"{root}/.brev/endpoints.json", "r") as myfile:
+    curr_dir = get_active_project_dir()
+    if curr_dir==None:
+        return []
+    # active_project = get_active_project()["id"]
+    with open(f"{curr_dir}/.brev/endpoints.json", "r") as myfile:
         endpoints = json.loads(myfile.read())
         myfile.close()
-        return [ep for ep in endpoints if ep["project_id"] == active_project]
-
-
-def formatted_ep_data():
-    with open(f"{root}/.brev/projects.json", "r") as project_file, open(
-        f"{root}/.brev/endpoints.json", "r"
-    ) as endpoint_file:
-        projs = json.loads(project_file.read())
-        eps = json.loads(endpoint_file.read())
-        project_file.close()
-        endpoint_file.close()
-        return format_endpoint_data(eps, projs)
+        return [ep for ep in endpoints]
 
 
 def do_init(email, password):
@@ -271,77 +267,39 @@ def setup_shell():
         click.secho("You might need to source ~/.config/fish/completions/brev.fish to finish setting up shell autocomplete" ,fg="yellow")
 
 
-def init_home():
-    brev_home = os.path.join(Path.home(), ".brev")
-    try:
-        os.mkdir(brev_home)
-    except FileExistsError:
-        click.secho("BrevDev directory already exists", fg="yellow")
-
-
-def create_root_dir():
-    if not os.path.isdir(f"{root}/BrevDev"):
-        click.secho("\tBrev Directory Does Not Exist...", fg="yellow")
-        os.mkdir(f"{root}/BrevDev")
-        click.secho(f"\tCreated ~/BrevDev! 🥞", fg="bright_green")
-
-
-def create_project_dir(project):
-    if not os.path.isdir(f"{root}/BrevDev/{project}"):
-        click.secho(f"\t{project} does not exist...", fg="yellow")
-        os.mkdir(f"{root}/BrevDev/{project}")
-        click.secho(f"\tCreated ~/BrevDev/{project} ! 🥞", fg="bright_green")
-    if not os.path.isdir(f"{root}/.brev"):
-        os.mkdir(f"{root}/.brev")
-
-
-def create_endpoint_file(endpoint, project):
-    if not os.path.isfile(f"{root}/BrevDev/{project}/{endpoint['name']}.py"):
-        with open(f"{root}/BrevDev/{project}/{endpoint['name']}.py", "w") as file:
+def create_endpoint_file(endpoint, project, dir):
+    if not os.path.isfile(f"{dir}/{endpoint['name']}.py"):
+        with open(f"{dir}/{endpoint['name']}.py", "w") as file:
             file.write(endpoint["code"])
             file.close()
         click.secho(
-            f"\tCreated {root}/BrevDev/{project}/{endpoint['name']}.py ! 🥞",
+            f"\tCreated ~🥞/{endpoint['name']}.py!",
             fg="bright_green",
         )
     else:
-        with open(f"{root}/BrevDev/{project}/{endpoint['name']}.py", "w") as file:
+        with open(f"{dir}/{endpoint['name']}.py", "w") as file:
             file.write(endpoint["code"])
             file.close()
         click.secho(
-            f"🥞 ~/BrevDev/{project}/{endpoint['name']}.py has been updated ",
+            f"\t ~🥞/{endpoint['name']}.py has been updated ",
             fg="bright_green",
         )
 
 
 def remove_endpoint_file(endpoint, project):
-    if not os.path.isfile(f"{root}/BrevDev/{project}/{endpoint['name']}.py"):
+    dir = get_active_project_dir()
+
+    if not os.path.isfile(f"{dir}/{endpoint['name']}.py"):
         return
     else:
-        os.remove(f"{root}/BrevDev/{project}/{endpoint['name']}.py")
-        click.secho(
-            f"🥞 ~/BrevDev/{project}/{endpoint['name']}.py has been removed ",
-            fg="green",
-        )
-
-def get_modules(write=False):
-    if write:
-        modules = BrevAPI(config.api_url).get_modules()
-        with open(f"{root}/.brev/modules.json", "w") as file:
-            file.write(json.dumps(modules["modules"]))
-            file.close()
-            return modules["modules"]
-    else:
-        with open(f"{root}/.brev/modules.json", "r") as file:
-            modules = json.loads(file.read())
-            file.close()
-            return modules
+        os.remove(f"{dir}/{endpoint['name']}.py")
+        click.echo(f"\t ~🥞/{endpoint['name']}.py has been removed")
 
 
-
-def create_module_file(project_name, project_id, write=False):
-    modules = get_modules(write=write)
-    module = [m for m in modules if m["project_id"] == project_id]
+def create_module_file(project_name, project_id, write=False, custom_dir=None):
+    curr_dir = get_active_project_dir() if custom_dir==None else custom_dir
+    modules = BrevAPI(config.api_url).get_modules()
+    module = [m for m in modules["modules"] if m["project_id"] == project_id]
     if len(module) == 0:
         return
     module = module[0]
@@ -350,21 +308,22 @@ def create_module_file(project_name, project_id, write=False):
         file_content = f"# no shared code yet. Code written here is accessible by every endpoint in this project {project_name}"
     else:
         file_content = module["source"]
-
-    if not os.path.isfile(f"{root}/BrevDev/{project_name}/shared.py"):
-        with open(f"{root}/BrevDev/{project_name}/shared.py", "w") as file:
+    
+    path = os.path.join(curr_dir, "shared.py")
+    if not os.path.isfile(path):
+        with open(path, "w") as file:
             file.write(file_content)
             file.close()
         click.secho(
-            f"\tCreated {root}/BrevDev/{project_name}/shared.py ! 🥞",
+            f"\tCreated ~🥞/shared.py",
             fg="bright_green",
         )
     else:
-        with open(f"{root}/BrevDev/{project_name}/shared.py", "w") as file:
+        with open(path, "w") as file:
             file.write(file_content)
             file.close()
         click.secho(
-            f"🥞 ~/BrevDev/{project_name}/shared.py has been updated ",
+            f"\t~🥞/shared.py has been updated ",
             fg="bright_green",
         )
 
@@ -380,22 +339,20 @@ def create_new_project(project_name):
 
 def update_module(source, project_id=None):
     if project_id == None:
+        curr_dir = get_active_project_dir()
         project_id = get_active_project()['id']
     
-    try: 
-        modules = get_modules() # try modules.json first
-    except:
-        # if none, then fetch
-        modules = get_modules(write=True)
-    
     # get matched module
-    module = [m for m in modules if m['project_id']==project_id][0]
+    modules = BrevAPI(config.api_url).get_modules()
+    module = [m for m in modules["modules"] if m['project_id']==project_id][0]
+    
     # update the module
     response = BrevAPI(config.api_url).update_module(module['id'], source)
 
     return response
 
-def create_variables_file(project_name, project_id):
+def create_variables_file(project_name, project_id, custom_dir=None):
+    curr_dir = get_active_project_dir() if custom_dir==None else custom_dir
     variables = BrevAPI(config.api_url).get_variables(project_id)
     variables = variables["variables"]
     file_contents = ""
@@ -407,142 +364,224 @@ def create_variables_file(project_name, project_id):
         for variable in variables:
             file_contents += f'\n{variable["name"]}="*****"'
 
-    if not os.path.isfile(f"{root}/BrevDev/{project_name}/variables.py"):
-        with open(f"{root}/BrevDev/{project_name}/variables.py", "w") as file:
+    path = os.path.join(curr_dir, "variables.py")
+    if not os.path.isfile(path):
+        with open(path, "w") as file:
             file.write(file_contents)
             file.close()
+        
         click.secho(
-            f"\tCreated {root}/BrevDev/{project_name}/variables.py ! 🥞",
+            f"\tCreated ~🥞/variables.py",
             fg="bright_green",
         )
     else:
-        with open(f"{root}/BrevDev/{project_name}/variables.py", "w") as file:
+        with open(path, "w") as file:
             file.write(file_contents)
             file.close()
         click.secho(
-            f"🥞 ~/BrevDev/{project_name}/variables.py has been updated ",
+            f"\t~🥞/variables.py has been updated ",
             fg="bright_green",
         )
 
 
-def create_readme_file(readme_string):
-    if not os.path.isfile(f"{root}/BrevDev/readme.md"):
-        with open(f"{root}/BrevDev/readme.md", "w") as file:
-            file.write(readme_string)
-            file.close()
-        click.secho(
-            f"\tCreated readme at {root}/BrevDev/readme.md ! 🥞", fg="bright_green"
-        )
-    else:
-        with open(f"{root}/BrevDev/readme.md", "w") as file:
-            file.write(readme_string)
-            file.close()
-            # Todo: run a diff, add a click.secho if changes were added to the readme
-
-
-def set_active_project(project):
-    with open(f"{root}/.brev/active.json", "w") as file:
-        file.write(json.dumps(project))
-        file.close()
-
-
-def get_active_project():
-    with open(f"{root}/.brev/active.json", "r") as file:
+def get_active_project(custom_dir=None):
+    curr_dir = get_active_project_dir() if custom_dir==None else custom_dir
+    with open(f"{curr_dir}/.brev/projects.json", "r") as file:
         active = json.loads(file.read())
-        return active
         file.close()
+        return active
 
 
+def get_all_project_dirs():
+    with open(f"{root}/.brev/active_projects.json", "r") as file:
+        all_dirs = json.loads(file.read())
+        return all_dirs
+
+
+def print_response(response):
+    msg_color = "green" if str(response.status_code )[0] == "2" else "red"
+    click.echo(
+        click.style("\nStatus Code: ", fg=msg_color) +
+        f"{response.status_code}"
+    )
+    headers = response.headers
+    response = response.json()
+    click.echo(
+        click.style("\nResponse: \n", fg=msg_color) +
+        f"{response}"
+    )
+    try:
+        stdout = urlparse.unquote(headers['x-stdout'])
+        click.echo(
+            click.style("\nStandard Out: \n", fg=msg_color) +
+            f"{stdout}"
+        )
+    except:
+        pass
+
+
+class BrevError(Exception):
+    pass
+
+def add_project_to_list(path):
+    # file to copy the paths of active projects
+    # try:
+    contents = []
+    # get contents if file exists
+    if os.path.isfile(f"{root}/.brev/active_projects.json"):
+        with open(f"{root}/.brev/active_projects.json", "r") as file:
+            contents = json.loads(file.read())
+            file.close()
+
+    # add new project
+    if path in contents:
+        raise BrevError("Brev is already initialized in this directory.")
+    else:
+        contents.append(path)
+    # if path not in contents:
+    #     contents.append(path)
+        
+
+    with open(f"{root}/.brev/active_projects.json", "w") as file:
+        file.write(json.dumps(contents))
+        file.close()
+    # except:
+    #     click.echo("An error occured. It's likely our fault.")
+    #     click.echo("We couldn't add the project to the global list, but this won't affect your functionality.")
+
+def new(type,name,dir,create=True):
+    # try:
+    if type == "project":
+        click.secho(f"Creating project {name}", fg="green")
+        spin.start()
+        response ={}
+        if create:
+            response = create_new_project(name)
+            response = response['project']
+        else: # fetch it from the server
+            response = BrevAPI(config.api_url).get_projects()
+            response = [p for p in response['projects'] if p['name']==name][0]
+        create_projects_file(name, custom_dir=dir)
+        spin.stop()
+        create_variables_file(response['name'], response['id'], dir)
+        create_module_file(response['name'], response['id'], write=True, custom_dir=dir)
+        click.secho(f"{type} {name} created successfully.", fg="bright_green")
+        # Add to a root brev
+        add_project_to_list(dir)
+
+    # except:
+    #     spin.stop()
+    #     click.secho(f"An error occured creating {type} {name}.", fg="bright_red")
+
+
+def not_in_brev_error_message():
+    click.echo("Not in active Brev directory. Please go to an active Brev directory or run 'brev init'")
+    all_dirs = get_all_project_dirs()
+    if len(all_dirs) == 0:
+        click.echo("\nHave you created a brev project yet? Run 'brev init' in a project to make it live with Brev!")
+    else:
+        click.echo("\nThese are active Brev directories: ")
+        for dir in all_dirs:
+            click.echo(f"\t{dir}")
+
+def get_active_project_dir():
+    for projdir in get_all_project_dirs():
+        if projdir in os.getcwd():
+            return projdir
+    return None
+    # should we do the below lines here??
+    # not_in_brev_error_message()
+    # click.Abort()
+    
+def get_remote_only_projects():
+    remote_projects = BrevAPI(config.api_url).get_projects()
+    local_projects = [path.split("/")[-1] for path in get_all_project_dirs()]
+    
+    remote_only_projects = [p for p in remote_projects['projects'] if p['name'] not in local_projects]
+
+    return remote_only_projects
+
+
+####################################################
+##          CLI COMMANDS (not helpers)            ##
+####################################################
+# brev override local
 def pull(entire_dir=False):
     click.echo(click.style("... overriding your local with remote", fg="yellow"))
+    curr_dir = get_active_project_dir()
     
-    create_root_dir()
-
-    readme_contents = ""
-
     endpoints = get_endpoints(write=True)
-    projects = get_projects()
-    if entire_dir == False:
-        projects = [get_active_project()]
-    for project in [p["name"] for p in projects]:
-        create_project_dir(project)
-        readme_contents += f"Project: {project}\n"
-        project_id = [p["id"] for p in projects if p["name"]==project][0]
-        create_variables_file(project, project_id)
-        create_module_file(project, project_id, write=True)
+    project = get_active_project()
+    
+    # update non-endpoints
+    create_variables_file(project['name'], project['id'])
+    create_module_file(project['name'], project['id'], write=True)
+    
+    # update endpoints
+    for endpoint in endpoints:
+        if endpoint["archived"] != True:
+            create_endpoint_file(endpoint, project, curr_dir)
 
-        numEPs = 0
-        if project in endpoints.keys():
-            for endpoint in endpoints[project]:
-                if endpoint["archived"] != True:
-                    numEPs += 1
-                    readme_contents += (
-                        f"\tEndpoint:\n\t\tname:{endpoint['name']}\n\t\tid:{endpoint['id']}"
-                    )
-                    readme_contents += (
-                        f"\n\t\tExecuteURL: {config.api_url}{endpoint['uri']}\n"
-                    )
-                    create_endpoint_file(endpoint, project)
-        if numEPs == 0:
-            readme_contents += "... no active endpoints \n"
-        readme_contents += "\n"
-
+# brev override remote
 def push(entire_dir=False):
     click.echo(click.style("... overriding remote with your local", fg="yellow"))
+    curr_dir = get_active_project_dir()
+    
     try:
-        endpoints = formatted_ep_data()
-        project_list = (endpoints.keys() if entire_dir == True else [get_active_project()["name"]])
-        for project in project_list:
-            for endpoint in endpoints[project]:
-                # grab contents of file
-                try:
-                    local_file = open(
-                        f"{root}/BrevDev/{project}/{endpoint['name']}.py", "r"
-                    )
-                    local_code = local_file.read()
-                    local_file.close()
-                    # push local_code to remote
-                    agent.BrevAPI(config.api_url).update_endpoint(
-                        code=local_code,
-                        name=endpoint["name"],
-                        project_id=endpoint["project_id"],
-                        id=endpoint["id"],
-                        methods=endpoint["methods"],
-                        uri=endpoint["uri"],
-                    )
-                    click.secho(
-                        f"🥞 ~/BrevDev/{project}/{endpoint['name']}.py has been pushed! ",
-                        fg="bright_green",
-                    )
-                except:
-                    # the file might not exist locally.
-                    pass
-            ## udpate shared code. 1 per project (as of this writing)
-            try: 
+        endpoints = get_endpoints(write=True)
+        project = get_active_project()
+        
+        for endpoint in endpoints:
+            try:
                 local_file = open(
-                    f"{root}/BrevDev/{project}/shared.py", "r"
+                    f"{curr_dir }/{endpoint['name']}.py", "r"
                 )
-                shared_code = local_file.read()
+                local_code = local_file.read()
                 local_file.close()
-                update_module(source=shared_code)
+                # push local_code to remote
+                agent.BrevAPI(config.api_url).update_endpoint(
+                    code=local_code,
+                    name=endpoint["name"],
+                    project_id=endpoint["project_id"],
+                    id=endpoint["id"],
+                    methods=endpoint["methods"],
+                    uri=endpoint["uri"],
+                )
                 click.secho(
-                    f"🥞 ~/BrevDev/{project}/shared.py has been pushed! ",
+                    f" ~🥞/{endpoint['name']}.py has been pushed! ",
                     fg="bright_green",
                 )
             except:
-                click.secho(
-                    f"Could not update ~/BrevDev/{project}/shared.py, it might contain a bug.",
-                    fg="yellow",
-                )                
+                # the file might not exist locally.
+                pass        
+
+        ## udpate shared code. 1 per project (as of this writing)
+        try: 
+            local_file = open(
+                f"{curr_dir}/shared.py", "r"
+            )
+            shared_code = local_file.read()
+            local_file.close()
+
+            update_module(source=shared_code)
+            click.secho(
+                f" ~🥞/shared.py has been pushed! ",
+                fg="bright_green",
+            )
+        except:
+            click.secho(
+                f"Could not update ~🥞/shared.py, it might contain a bug.",
+                fg="yellow",
+            )                
 
     except requests.exceptions.HTTPError:
         click.secho(
             f"Could not fetch from remote. Please check your internet.", fg="bright_red"
         )
 
-
-### Entry points from Commands.py ###
+# brev status
 def status():
+    curr_dir = get_active_project_dir()
     click.echo(
         f"Your active project is "
         + click.style(f"{get_active_project()['name']}", fg="green")
@@ -566,22 +605,9 @@ def status():
     else:
         click.echo("no installed packages")
 
-def set_default_project():
-    project_list = get_projects()
-    default = [p for p in project_list if p['name']=="default"]
-    set(default[0]['name'])
-
-
-def set(project_name):
-    project_list = get_projects()
-    selected_project = [p for p in project_list if p["name"] == project_name][0]
-    set_active_project(selected_project)
-    click.echo(
-        f"Your active project is now "
-        + click.style(f"{get_active_project()['name']}", fg="green")
-    )
-
+# brev run
 def run(endpoint,httptype,body,args,stale):
+    curr_dir = get_active_project_dir()
     endpoint_url = get_endpoint_list()
     ep = [ep for ep in endpoint_url if ep["name"] == endpoint][0]
     
@@ -595,7 +621,7 @@ def run(endpoint,httptype,body,args,stale):
 
     try:
         local_file = open(
-            f"{root}/BrevDev/{get_active_project()['name']}/{ep['name']}.py", "r"
+            f"{curr_dir}/{ep['name']}.py", "r"
         )
         local_code = local_file.read()
         local_file.close()
@@ -605,7 +631,7 @@ def run(endpoint,httptype,body,args,stale):
 
     try:
         module_file = open(
-            f"{root}/BrevDev/{get_active_project()['name']}/shared.py", "r"
+            f"{curr_dir}/shared.py", "r"
         )
         shared_code = module_file.read()
         module_file.close()
@@ -616,7 +642,7 @@ def run(endpoint,httptype,body,args,stale):
     if not stale == True: 
         try:
             spin.start()
-            click.echo("Updating endpoint/shared code before running remote ...")
+            click.secho("Updating endpoint/shared code before running remote ...")
             agent.BrevAPI(config.api_url).update_endpoint(
                 code=local_code,
                 name=ep["name"],
@@ -687,46 +713,38 @@ def run(endpoint,httptype,body,args,stale):
         click.echo(response)
         print_response(response)
 
-def print_response(response):
-    msg_color = "green" if str(response.status_code )[0] == "2" else "red"
-    click.echo(
-        click.style("\nStatus Code: ", fg=msg_color) +
-        click.style(f"{response.status_code}", fg=msg_color)
-    )
-    headers = response.headers
-    response = response.json()
-    click.echo(
-        click.style("\nResponse: \n") +
-        click.style(f"{response}")  
-    )
-    try:
-        stdout = urlparse.unquote(headers['x-stdout'])
-        click.echo(
-            click.style("\nStandard Out: \n") +
-            click.style(stdout)
-        )
-    except:
-        pass
-
+# brev list
 def list(type):
+    click.echo("\nYour Brev projects: ")
+    for dir in get_all_project_dirs():
+        click.echo(f"\t{dir}")
+    click.echo("\n")
+
+    curr_dir = get_active_project_dir()
     if not type or type == "project" or type == "endpoint":
-        readme_contents = ""
-        endpoints = formatted_ep_data()
-        projects = get_projects()
-        for project in endpoints.keys():
-            full_proj_obj = [p for p in projects if p['name']==project]
+        endpoints = get_endpoints(False)
+        project = get_active_project()
 
-            readme_contents += f"Project: {project}\n"
-            readme_contents += f"API docs: {full_proj_obj[0]['domain']}/docs\n"
-            for endpoint in endpoints[project]:
-                readme_contents += f"\tEndpoint:\n\t\tname: {endpoint['name']}\n\t\tid: {endpoint['id']}\n"
-                readme_contents += f"\t\tURL: {full_proj_obj[0]['domain']}{endpoint['uri']}\n"
-            readme_contents += "\n"
+        click.echo(
+            f"Current Project: " + click.style(f"{project['name']}", fg="green")
+        )
+        click.echo(
+            f"API docs: {project['domain']}/docs\n"
+        )
+        for endpoint in endpoints:
+            click.echo(
+                f"\tEndpoint:\n\t\tname: {endpoint['name']}\n\t\tid: {endpoint['id']}" 
+            )
+            click.echo(
+                f"\t\tURL: "
+                + click.style(f"{project['domain']}{endpoint['uri']}", fg="green")
+                + f"\n"
+            )
 
-        click.secho(readme_contents, fg="yellow")
+
     elif type == "package":
         pkgs = get_packages()
-        click.secho(f"Project :", fg="green")
+        click.secho(f"Project :")
         installed = ""
         errored = ""
         pending = ""
@@ -738,39 +756,80 @@ def list(type):
             elif pkg["status"] == "pending":
                 pending += f"{pkg['name']}=={pkg['version']} {pkg['home_page']}"
         if len(installed) > 0:
-            click.secho("Installed Packages:", fg="bright_green")
+            click.secho("Installed Packages:")
             click.secho(installed)
         if len(errored) > 0:
-            click.secho("Errored Packages:", fg="bright_red")
+            click.secho("Errored Packages:")
             click.secho(errored)
         if len(pending) > 0:
-            click.secho("Pending Packages:", fg="purple")
+            click.secho("Pending Packages:")
             click.secho(pending)
 
+# brev diff
 def diff():
-    click.secho(f"Fetching remote endpoints to run diff ...", fg="yellow")
-    endpoints = get_endpoints(write=False)
+    curr_dir = get_active_project_dir()
+    click.secho(f"Fetching remote endpoints to run diff ...")
+    endpoints = get_endpoints(write=False)    
     unchanged = True
-    for project in endpoints.keys():
-        for endpoint in endpoints[project]:
-            # grab contents of file
-            # if file not there, they need to pull
-            try:
-                local_file = open(
-                    f"{root}/BrevDev/{project}/{endpoint['name']}.py", "r"
-                )
-                local_code = local_file.read()
-                local_file.close()
-            except:
-                click.secho(
-                    f"Endpoint {project}/{endpoint['name']} doesn't exist locally and needs to be fetched.",
-                    fg="yellow",
-                )
-                break
+    for endpoint in endpoints:
+        # grab contents of file
+        # if file not there, they need to pull
+        try:
+            local_file = open(
+                f"{curr_dir}/{endpoint['name']}.py", "r"
+            )
+            local_code = local_file.read()
+            local_file.close()
+        except:
+            unchanged=False
+            click.secho(
+                f"Endpoint {endpoint['name']} doesn't exist locally and needs to be fetched.",
+                fg="yellow",
+            )
+            break
 
+        diff = difflib.ndiff(
+            endpoint["code"].splitlines(keepends=True),
+            local_code.splitlines(keepends=True),
+        )
+        output = str("".join(diff))
+        total_changes = 0
+        changes = []
+        for line in output.split("\n"):
+            if len(line) == 0:
+                continue
+            elif line[0] == "-":
+                changes.append((f"\t{line}", "bright_red"))
+                total_changes += 1
+            elif line[0] == "+":
+                changes.append((f"\t{line}", "bright_green"))
+                total_changes += 1
+            else:
+                continue
+
+        if total_changes != 0:
+            unchanged = False
+            click.secho(f"Diff for {endpoint['name']}:", fg="yellow")
+            for change in changes:
+                click.secho(change[0], fg=change[1])
+
+    ## check shared code. 1 per project (as of this writing)
+    try: 
+        # get current shared code
+        local_file = open(
+            f"{curr_dir}/shared.py", "r"
+        )
+        local_shared = local_file.read()
+        local_file.close()
+
+        # get remote shared code
+        project = get_active_project()
+        modules = BrevAPI(config.api_url).get_modules()
+        remote_shared = [m for m in modules['modules'] if m["project_id"]==project["id"]]
+        if not len(remote_shared) == 0:
             diff = difflib.ndiff(
-                endpoint["code"].splitlines(keepends=True),
-                local_code.splitlines(keepends=True),
+                remote_shared[0]['source'].splitlines(keepends=True),
+                local_shared.splitlines(keepends=True)
             )
             output = str("".join(diff))
             total_changes = 0
@@ -779,11 +838,9 @@ def diff():
                 if len(line) == 0:
                     continue
                 elif line[0] == "-":
-                    # click.secho(f"\t{line}", fg="bright_red")
                     changes.append((f"\t{line}", "bright_red"))
                     total_changes += 1
                 elif line[0] == "+":
-                    # click.secho(f"\t{line}", fg="bright_green")
                     changes.append((f"\t{line}", "bright_green"))
                     total_changes += 1
                 else:
@@ -791,30 +848,19 @@ def diff():
 
             if total_changes != 0:
                 unchanged = False
-                click.secho(f"Diff for {project}/{endpoint['name']}:", fg="yellow")
+                click.secho(f"Diff for shared code:", fg="yellow")
                 for change in changes:
                     click.secho(change[0], fg=change[1])
-    
+    except:
+        click.secho(
+            f"Could not check ~🥞/shared.py",
+            fg="yellow",
+        )       
+        
     if unchanged:
         click.secho(f"No changes. You're synced with remote.", fg="bright_green")
 
-def new(type,name):
-    try:
-        if type == "project":
-            click.secho(f"Creating project {name}", fg="green")
-            spin.start()
-            response = create_new_project(name)
-            get_projects(write=True)
-            spin.stop()
-            set_active_project(response['project'])
-            create_project_dir(response['project']['name'])
-            create_variables_file(response['project']['name'], response['project']['id'])
-            create_module_file(response['project']['name'], response['project']['id'], write=True)
-            click.secho(f"{type} {name} created successfully.", fg="bright_green")
-    except:
-        spin.stop()
-        click.secho(f"An error occured creating {type} {name}.", fg="bright_red")
-
+# brev add
 def add(type,name):
     try:
         if type == "package":
@@ -836,6 +882,7 @@ def add(type,name):
             spin.stop()
         click.secho(f"{type} {name} added successfully.", fg="bright_green")
     except:
+        # print(sys.exc_info())
         spin.stop()
         click.secho(f"An error occured adding {type} {name}.", fg="bright_red")
 

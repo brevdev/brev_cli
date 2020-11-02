@@ -30,9 +30,7 @@ class GetOptionsFromType(click.Argument):
         elif opts["type"] == "endpoint":
             self.type = click.Choice([e["name"] for e in helpers.get_endpoint_list()])
             self.required = True  # this is used for logs, doesnt affect anything else
-        elif opts["type"] == "project":
-            self.type = click.Choice(helpers.get_project_list())
-            # self.type = click.Choice([p["name"] for p in get_project_list()])
+        # Note: We don't support projects here yet
 
         return super(GetOptionsFromType, self).handle_parse_result(ctx, opts, args)
 
@@ -60,37 +58,71 @@ class GetArgumentsFromRequestType(click.Option):
             ctx, opts, args
         )
 
-def localProjectWrapper():
-    try:
-        return helpers.get_project_list()
-    except:
-        click.secho("there is no active project", fg="red")
-
-
 def localWrapper():
     try:
         return [ep["name"] for ep in helpers.get_endpoint_list()]
     except:
         pass
 
+def projectWrapper():
+    try:
+        return [p["name"] for p in helpers.get_remote_only_projects()]
+    except:
+        pass
 
 spin = spinner.Spinner()
 
-@click.command(short_help="Initialize your Brev home, and retrieve all resources.")
-def init():
-    helpers.init_home()
-    helpers.setup_shell()
-    helpers.pull(entire_dir=True)
-    helpers.set_default_project()
+def validate_directory():
+    if helpers.get_active_project_dir() == None:
+        helpers.not_in_brev_error_message()
+        return False
+    return True
+        # raise click.Abort()
 
+@click.command(short_help="Initialize a Brev directory.")
+@click.argument(
+    "project",
+    type=click.Choice(projectWrapper()),
+    nargs=1,
+    required=False,
+    autocompletion=helpers.get_env_vars,
+)
+def init(project):
+    curr_dir = os.getcwd()
+    try:
+        if not project == None:
+            # create folder for project
+            curr_dir = f"{curr_dir}/{project}"
+            os.mkdir(curr_dir)
+            os.mkdir(f"{curr_dir}/.brev")
+            helpers.new("project", project, curr_dir, create=False)
+            endpoints = helpers.get_endpoints(write=True, init=True, custom_dir=curr_dir) # inits the .brev/endpoints.json file
+            project = helpers.get_active_project(curr_dir)
+            ## now add the endpoints
+            for endpoint in endpoints:
+                if endpoint["archived"] != True:
+                    helpers.create_endpoint_file(endpoint, project, curr_dir)
+
+        else:        
+            # create the .brev directory here
+            if not os.path.isdir(f"{curr_dir}/.brev"):
+                os.mkdir(f"{curr_dir}/.brev")
+            
+            # create new project with foldername as project name
+            folder_name = os.path.basename(curr_dir)
+            helpers.new("project", folder_name, curr_dir)
+            helpers.get_endpoints(write=True, init=True) # inits the .brev/endpoints.json file
+            
+    except helpers.BrevError as BErr:
+        click.secho(str(BErr), fg="green")
+    except:
+        click.echo("An error occured. Please try again or reach out to support. Text us: 415-818-0207")
 
 @click.command(short_help="Login to Brev CLI")
 def login():
+    click.echo("LOGIN ")
     authentication.Auth().login()
-    helpers.init_home()
     helpers.setup_shell()
-    helpers.pull(entire_dir=True)
-    helpers.set_default_project()
 
 
 @click.command(short_help="override local or remote")
@@ -102,42 +134,22 @@ def login():
     autocompletion=helpers.get_env_vars,
 )
 def override(location, entire_dir=False):
+    if not validate_directory():
+        return
+
     if location == "remote":
-        push(entire_dir=entire_dir)
+        helpers.push(entire_dir=entire_dir)
     elif location == "local":
-        pull(entire_dir=entire_dir)
-
-
-def pull(entire_dir=False):
-    helpers.pull(entire_dir=entire_dir)
-
-
-def push(entire_dir=False):
-    helpers.push(entire_dir=entire_dir)
-
+        helpers.pull(entire_dir=entire_dir)
 
 @click.command(short_help="Check current environment settings")
 def status():
-    helpers.status()
-
-
-@click.command(short_help="Set active project")
-@click.argument(
-    "project",
-    type=click.Choice(localProjectWrapper()),
-    nargs=1,
-    required=True,
-    autocompletion=helpers.get_env_vars,
-)
-def set(project):
-    """
-        Set your active project\n
-        \tPROJECT NAME: project you wish to set as active.\n
-        \tActive project is used for \n-running endpoints,\n-getting variables,\n-getting packages,\n-getting shared code
-        \tex: \n
-        \t\tbrev set default #sets project 'default' to be active
-    """
-    helpers.set(project)
+    if not validate_directory():
+        return
+    try:
+        helpers.status()
+    except:
+        helpers.not_in_brev_error_message()
 
 @click.command(short_help="run endpoints")
 @click.argument(
@@ -164,6 +176,8 @@ def set(project):
 @click.option("--args", "-a", multiple=True)
 @click.option('--stale', '-s', is_flag=True, help="Do not update remote before running.")
 def run(endpoint, httptype, body, args, stale):
+    if not validate_directory():
+        return
     helpers.run(endpoint,httptype,body,args,stale)
 
 
@@ -176,33 +190,16 @@ def run(endpoint, httptype, body, args, stale):
     autocompletion=helpers.get_env_vars,
 )
 def list(type):
+    if not validate_directory():
+        return
     helpers.list(type)
 
 
 @click.command(short_help="View a diff of your current environment from remote")
 def diff():
+    if not validate_directory():
+        return
     helpers.diff()
-
-
-@click.command(short_help="Create a new project")
-@click.argument(
-    "type",
-    type=click.Choice(["project"]),
-    nargs=1,
-    required=True,
-    autocompletion=helpers.get_env_vars,
-)
-@click.argument("name", nargs=1, required=True)
-def new(type, name):
-    """
-        Create new project\n
-        \tTYPE: 'project'\n
-        \tname: whatever you wish to name the project\n
-        \tex: \n
-        \t\tbrev new project myNewProj #creates new project named myNewProj
-    """
-    helpers.new(type,name)
-
 
 @click.command(short_help="Add a package, variable, or endpoint")
 @click.argument(
@@ -221,7 +218,9 @@ def add(type, name):
         \tex: \n
         \t\tbrev add Arrow # pip installs Arrow to your project
     """
-    helpers.add(type,name)
+    if not validate_directory():
+        return
+    helpers.add(type, name)
 
 
 @click.command(short_help="Remove a package, variable, or endpoint")
@@ -245,7 +244,19 @@ def remove(type, name):
         \tTYPE: 'package', 'varaible', 'endpoint'\n
         \tname: package, variable, or endpoint name\n
         \tex: \n
-        \t\tbrev remve Arrow # removes package Arrow from your project environment
+        \t\tbrev remove Arrow # removes package Arrow from your project environment
     """
+    if not validate_directory():
+        return
     helpers.remove(type,name)
 
+@click.command(short_help="TEST")
+def test():
+    # project = helpers.get_active_project()
+    # helpers.create_variables_file(project['name'],project['id'])
+    spin.start()
+    # print([ep["name"] for ep in helpers.get_endpoint_list()])
+    # project="asdfasdf"
+    # curr_dir = os.getcwd()
+    # curr_dir = f"{curr_dir}/{project}"
+    # endpoints = helpers.get_endpoints(write=True, init=True, custom_dir=curr_dir) # inits the .brev/endpoints.json file

@@ -9,7 +9,6 @@ import platform
 class Spinner(object):
 
 
-    # spinner_cycle = itertools.cycle(['-', '/', '|', '\\'])
     spinner_cycle = [
         " [🥞   ]",
         " [ 🥞  ]",
@@ -27,6 +26,7 @@ class Spinner(object):
         self.spin_thread = threading.Thread(target=self.init_spin)
 
     def start(self):
+        # self.stop()
         self.spin_thread.start()
 
     def stop(self):
@@ -40,7 +40,8 @@ class Spinner(object):
         while not self.stop_running.is_set():
             # sys.stdout.write(self.spinner_cycle.next()) # .next() deprecated in python3 apparently 
             if self.emojiSupported:
-                print(self.spinner_cycle[self.i % len(self.spinner_cycle)], end="\r")
+                # sys.stdout.write(self.spinner_cycle[self.i % len(self.spinner_cycle)] + "\r")#, end="\r")
+                print(self.spinner_cycle[self.i % len(self.spinner_cycle)] , end="\r")
                 time.sleep(.1)
                 self.i += 1
             else:                
