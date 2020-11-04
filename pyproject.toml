@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "brev-cli"
-version = "0.1.0"
+version = "0.2.0"
 description = "The CLI for Brev.Dev!"
 authors = ["nader <nader+cli@brev.dev>", "alec <alec+cli@brev.dev>"]
 license = "MIT"

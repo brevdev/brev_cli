@@ -44,11 +44,6 @@ cli.add_command(commands.list)
 cli.add_command(commands.diff)
 cli.add_command(commands.run)
 cli.add_command(commands.status)
-
-# STILL TO REFACTOR
 cli.add_command(commands.login)
 cli.add_command(commands.override)
 cli.add_command(commands.remove)
-
-# OTHER 
-cli.add_command(commands.test)

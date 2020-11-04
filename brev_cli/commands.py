@@ -250,13 +250,13 @@ def remove(type, name):
         return
     helpers.remove(type,name)
 
-@click.command(short_help="TEST")
-def test():
-    # project = helpers.get_active_project()
-    # helpers.create_variables_file(project['name'],project['id'])
-    spin.start()
-    # print([ep["name"] for ep in helpers.get_endpoint_list()])
-    # project="asdfasdf"
-    # curr_dir = os.getcwd()
-    # curr_dir = f"{curr_dir}/{project}"
-    # endpoints = helpers.get_endpoints(write=True, init=True, custom_dir=curr_dir) # inits the .brev/endpoints.json file
+# @click.command(short_help="TEST")
+# def test():
+#     # project = helpers.get_active_project()
+#     # helpers.create_variables_file(project['name'],project['id'])
+#     spin.start()
+#     # print([ep["name"] for ep in helpers.get_endpoint_list()])
+#     # project="asdfasdf"
+#     # curr_dir = os.getcwd()
+#     # curr_dir = f"{curr_dir}/{project}"
+#     # endpoints = helpers.get_endpoints(write=True, init=True, custom_dir=curr_dir) # inits the .brev/endpoints.json file
