@@ -37,7 +37,6 @@ def cli():
     #     raise click.Abort()
 
 
-# REFACTORED
 cli.add_command(commands.init)
 cli.add_command(commands.add)
 cli.add_command(commands.list)
@@ -47,3 +46,4 @@ cli.add_command(commands.status)
 cli.add_command(commands.login)
 cli.add_command(commands.override)
 cli.add_command(commands.remove)
+cli.add_command(commands.logs)

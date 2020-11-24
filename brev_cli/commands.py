@@ -250,6 +250,16 @@ def remove(type, name):
         return
     helpers.remove(type,name)
 
+
+@click.command(short_help="View Project Logs")
+def logs():
+    """
+       View Project Logs\n
+    """
+    if not validate_directory():
+        return
+    helpers.logs()
+
 # @click.command(short_help="TEST")
 # def test():
 #     # project = helpers.get_active_project()
