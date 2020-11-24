@@ -122,6 +122,7 @@ def init(project):
 def login():
     click.echo("LOGIN ")
     authentication.Auth().login()
+    helpers.init_necessary_files()
     helpers.setup_shell()
 
 

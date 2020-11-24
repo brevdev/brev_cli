@@ -112,6 +112,10 @@ def remove_variable(var_id):
     variables = BrevAPI(config.api_url).remove_variables(var_id)
     return variables
 
+def init_necessary_files():
+    with open(f"{root}/.brev/active_projects.json", "w") as file:
+        file.write(json.dumps([]))
+        file.close()
 
 def format_endpoint_data(endpoints, projects):
     project_names = {p["id"]: p["name"] for p in projects}
@@ -452,7 +456,8 @@ def add_project_to_list(path):
 def new(type,name,dir,create=True):
     # try:
     if type == "project":
-        click.secho(f"Creating project {name}", fg="green")
+        verb = "Creating" if create==True else "Cloning"
+        click.secho(f"{verb} project {name}", fg="green")
         spin.start()
         response ={}
         if create:
