@@ -950,23 +950,17 @@ def parse_log(log):
     return f"{log['type']} {datetime} {exec_time} {status_code} {request_id} {uri} \n{stdout}"
 
 def logs():
-    response = BrevAPI(config.api_url).get_logs(type="project", id=get_active_project()['id'])
-    
-# {
-#     'meta': {
-#         'cpu_time': 0.1, 
-#         'wall_time': 0.1
-#     }, 
-#     'namespace': 'srxacf9s', 
-#     'origin': 'user', 
-#     'resource_id': 'dep-565b85c7-374e-4965-88c6-b4c29b715dea', 
-#     'stdout': '', 
-#     'timestamp': '2020-11-24T03:28:21.251Z', 
-#     'type': 'startup'
-# }
 
-    for log in response['logs']:
-        
-        click.echo(parse_log(log))
+    # gets first output
+    prevResponse = ""
+
+    while True:
+        response = BrevAPI(config.api_url).get_logs(type="project", id=get_active_project()['id'])
+        if not response == prevResponse:
+            for log in response['logs'][::-1]:
+                click.echo(parse_log(log))
+        prevResponse = response
+
+        time.sleep(0.5)
 
         
