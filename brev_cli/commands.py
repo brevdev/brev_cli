@@ -256,10 +256,19 @@ def remove(type, name):
     helpers.remove(type,name)
 
 
-@click.command(short_help="View Project Logs")
+@click.command(short_help="Also View Project Logs (sometimes people add an 's')")
 def logs():
     """
        View Project Logs\n
+    """
+    if not validate_directory():
+        return
+    helpers.logs()
+
+@click.command(short_help="View Project Logs")
+def log():
+    """
+       View Project Logs
     """
     if not validate_directory():
         return
