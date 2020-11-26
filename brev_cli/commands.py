@@ -274,13 +274,15 @@ def log():
         return
     helpers.logs()
 
-# @click.command(short_help="TEST")
-# def test():
-#     # project = helpers.get_active_project()
-#     # helpers.create_variables_file(project['name'],project['id'])
-#     spin.start()
-#     # print([ep["name"] for ep in helpers.get_endpoint_list()])
-#     # project="asdfasdf"
-#     # curr_dir = os.getcwd()
-#     # curr_dir = f"{curr_dir}/{project}"
-#     # endpoints = helpers.get_endpoints(write=True, init=True, custom_dir=curr_dir) # inits the .brev/endpoints.json file
+
+def rename():
+    pass
+
+def update_renamed():
+    helpers.get_endpoints(write=True)
+
+@click.command(short_help="Refresh Endpoints")
+def refresh():
+    if not validate_directory():
+        return
+    helpers.refresh()

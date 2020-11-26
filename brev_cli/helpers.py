@@ -404,6 +404,7 @@ def print_response(response):
         click.style("\nStatus Code: ", fg=msg_color) +
         f"{response.status_code}"
     )
+    notFound = f"{response.status_code}" == "404"
     headers = response.headers
     response = response.json()
     click.echo(
@@ -419,6 +420,10 @@ def print_response(response):
     except:
         pass
 
+
+    if notFound:
+        click.secho("The endpoint URL doesn't exist. Maybe you changed the URL?", fg="bright_red")
+        click.secho("Run 'brev refresh' to refresh your endpoints locally.", fg="bright_red")
 
 class BrevError(Exception):
     pass
@@ -963,4 +968,14 @@ def logs():
 
         time.sleep(0.5)
 
-        
+
+def refresh():
+    
+    try:
+        click.echo("Refreshing local endpoints")
+        spin.start()
+        get_endpoints(write=True)
+        spin.stop();
+        click.secho("Refreshing complete!", fg="bright_green");        
+    except:
+        click.echo("An error occured refreshing your endpoints. Please try again or text (415) 818-0207 for help.")
