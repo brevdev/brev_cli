@@ -123,6 +123,11 @@ def login():
     click.echo("LOGIN ")
     authentication.Auth().login()
     helpers.setup_shell()
+    
+    root = os.path.expanduser("~")
+    with open(f"{root}/.brev/active_projects.json", "w") as file:
+        file.write(json.dumps([]))
+        file.close()
 
 
 @click.command(short_help="override local or remote")
