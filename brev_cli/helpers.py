@@ -404,6 +404,7 @@ def print_response(response):
         click.style("\nStatus Code: ", fg=msg_color) +
         f"{response.status_code}"
     )
+    notFound = f"{response.status_code}" == "404"
     headers = response.headers
     response = response.json()
     click.echo(
@@ -419,6 +420,10 @@ def print_response(response):
     except:
         pass
 
+
+    if notFound:
+        click.secho("The endpoint URL doesn't exist. Maybe you changed the URL?", fg="bright_red")
+        click.secho("Run 'brev refresh' to refresh your endpoints locally.", fg="bright_red")
 
 class BrevError(Exception):
     pass
@@ -918,3 +923,59 @@ def remove(type,name):
     except:
         spin.stop()
         click.secho(f"An error occured removing {type} {name}.", fg="red")
+
+
+def parse_log(log):
+    date = log['timestamp'].split("T")[0]
+    time = log['timestamp'].split("T")[1]
+    datetime = f"{date}/{time}"
+    exec_time = f"{log['meta']['wall_time']}ms"
+
+    uri = ""
+    if "uri" in log['meta']:
+        uri = log['meta']['uri']
+    
+    status_code = ""
+    if "status_code" in log['meta']:
+        status_code = log['meta']['status_code']
+    
+    request_id = ""
+    if "request_id" in log['meta']:
+        request_id = log['meta']['request_id']
+
+    stdout= ""
+    for line in log['stdout'].split("\n"):
+        if (len(line) > 0):
+            if line[:6] == "[INFO]":
+                continue
+            else:
+                stdout += line + "\n"
+
+
+    return f"{log['type']} {datetime} {exec_time} {status_code} {request_id} {uri} \n{stdout}"
+
+def logs():
+
+    # gets first output
+    prevResponse = ""
+
+    while True:
+        response = BrevAPI(config.api_url).get_logs(type="project", id=get_active_project()['id'])
+        if not response == prevResponse:
+            for log in response['logs'][::-1]:
+                click.echo(parse_log(log))
+        prevResponse = response
+
+        time.sleep(0.5)
+
+
+def refresh():
+    
+    try:
+        click.echo("Refreshing local endpoints")
+        spin.start()
+        get_endpoints(write=True)
+        spin.stop();
+        click.secho("Refreshing complete!", fg="bright_green");        
+    except:
+        click.echo("An error occured refreshing your endpoints. Please try again or text (415) 818-0207 for help.")
