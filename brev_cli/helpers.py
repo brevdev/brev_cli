@@ -276,28 +276,28 @@ def create_endpoint_file(endpoint, project, dir):
         with open(f"{dir}/{endpoint['name']}.py", "w") as file:
             file.write(endpoint["code"])
             file.close()
-        click.secho(
-            f"\tCreated ~🥞/{endpoint['name']}.py!",
-            fg="bright_green",
-        )
+        # click.secho(
+        #     f"\tCreated ~🥞/{endpoint['name']}.py!",
+        #     fg="bright_green",
+        # )
     else:
         with open(f"{dir}/{endpoint['name']}.py", "w") as file:
             file.write(endpoint["code"])
             file.close()
-        click.secho(
-            f"\t ~🥞/{endpoint['name']}.py has been updated ",
-            fg="bright_green",
-        )
+        # click.secho(
+        #     f"\t ~🥞/{endpoint['name']}.py has been updated ",
+        #     fg="bright_green",
+        # )
 
 
 def remove_endpoint_file(endpoint, project):
     dir = get_active_project_dir()
 
     if not os.path.isfile(f"{dir}/{endpoint['name']}.py"):
-        return
+        raise BrevError(f"Endpoint {endpoint['name']} does not exist or isn't on this machine.")
     else:
         os.remove(f"{dir}/{endpoint['name']}.py")
-        click.echo(f"\t ~🥞/{endpoint['name']}.py has been removed")
+        # click.echo(f"\t ~🥞/{endpoint['name']}.py has been removed")
 
 
 def create_module_file(project_name, project_id, write=False, custom_dir=None):
@@ -916,13 +916,6 @@ def remove(type,name):
             click.secho(f"Removing variable {name}", fg="green")
             response = remove_variable(variable[0]["id"])
             create_variables_file(get_active_project()['name'],get_active_project()['id'])
-        elif type == "endpoint":
-            endpoint = [e for e in get_endpoint_list() if e["name"] == name]
-            if len(endpoint) == 0:
-                click.secho(f"{type} {name} does not exist on your project. ", fg="red")
-                return
-            click.secho(f"Removing endpoint {name}", fg="green")
-            response = remove_endpoint(endpoint[0]["id"])
         spin.stop()
         click.secho(f"{type} {name} removed successfully.", fg="green")
     except:

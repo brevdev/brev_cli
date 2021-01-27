@@ -207,10 +207,10 @@ def diff():
         return
     helpers.diff()
 
-@click.command(short_help="Add a package, variable, or endpoint")
+@click.command(short_help="Add a package or variable")
 @click.argument(
     "type",
-    type=click.Choice(["package", "variable", "endpoint"]),
+    type=click.Choice(["package", "variable"]),
     nargs=1,
     required=True,
     autocompletion=helpers.get_env_vars,
@@ -218,9 +218,9 @@ def diff():
 @click.argument("name", nargs=1, required=True)
 def add(type, name):
     """
-        Add a package or variable or endpoint\n
-        \tTYPE: 'package', 'variable', or 'endpoint'\n
-        \tname: package, variable, or endpoint name\n
+        Add a package or variable\n
+        \tTYPE: 'package' or 'variable'\n
+        \tname: package or variable name\n
         \tex: \n
         \t\tbrev add Arrow # pip installs Arrow to your project
     """
@@ -229,10 +229,10 @@ def add(type, name):
     helpers.add(type, name)
 
 
-@click.command(short_help="Remove a package, variable, or endpoint")
+@click.command(short_help="Remove a package or variable")
 @click.argument(
     "type",
-    type=click.Choice(["package", "variable", "endpoint"]),
+    type=click.Choice(["package", "variable"]),
     nargs=1,
     required=True,
     autocompletion=helpers.get_env_vars,
@@ -246,9 +246,9 @@ def add(type, name):
 )
 def remove(type, name):
     """
-        Remove a package, variable, or endpoint\n
-        \tTYPE: 'package', 'varaible', 'endpoint'\n
-        \tname: package, variable, or endpoint name\n
+        Remove a package, variable\n
+        \tTYPE: 'package', 'varaible'\n
+        \tname: package or variable name\n
         \tex: \n
         \t\tbrev remove Arrow # removes package Arrow from your project environment
     """

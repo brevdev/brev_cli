@@ -2,6 +2,7 @@ import click
 from pyfiglet import Figlet
 import os
 from . import commands
+from . import endpoints
 from . import helpers
 # def do_upgrade():
 #     print "Performing upgrade"
@@ -49,3 +50,4 @@ cli.add_command(commands.remove)
 cli.add_command(commands.logs)
 cli.add_command(commands.log)
 cli.add_command(commands.refresh)
+cli.add_command(endpoints.endpoint)

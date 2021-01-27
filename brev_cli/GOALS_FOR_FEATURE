@@ -1,0 +1,21 @@
+Major goals for this feature:
+
+[ ] Have empathy. Show the most helpful examples we can,
+    and handle errors gracefully.
+
+[ ] Helper functions never show print statements. Throw errors.
+    Catch the errors in the invoking functions.
+
+[ ] 
+
+
+
+
+ToDo:
+
+[ ] Endpoints
+    [ ] Add
+    [ ] Remove
+    [ ] Run
+        [ ] Add custom arguments based on previous (HTTP type only for run)
+        [ ] Run it!
