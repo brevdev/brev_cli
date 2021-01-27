@@ -67,7 +67,7 @@ def remove(name):
 
         endpoint = [e for e in helpers.get_endpoint_list() if e["name"] == name]
         if len(endpoint) == 0:
-            click.secho(f"Endpoint {name} does not exist on your project. ", fg="red")
+            spinner.fail(f"Endpoint {name} does not exist on your project.")
             return
         try:
             response = helpers.remove_endpoint(endpoint[0]["id"])

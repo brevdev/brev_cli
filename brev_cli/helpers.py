@@ -885,11 +885,6 @@ def add(type,name):
             response = add_variable(name, value)
             create_variables_file(get_active_project()['name'],get_active_project()['id'])
             spin.stop()
-        elif type == "endpoint":
-            click.secho(f"Adding endpoint {name}", fg="green")
-            spin.start()
-            response = add_endpoint(name)
-            spin.stop()
         click.secho(f"{type} {name} added successfully.", fg="bright_green")
     except:
         # print(sys.exc_info())
@@ -899,15 +894,7 @@ def add(type,name):
 def remove(type,name):
     try:
         spin.start()
-        if type == "package":
-            packages = get_packages()
-            package = [p for p in packages if p["name"] == name]
-            if len(package) == 0:
-                click.secho(f"{type} {name} does not exist on your project. ", fg="red")
-                return
-            click.secho(f"Removing package {name}", fg="green")
-            response = remove_package(package[0]["id"])
-        elif type == "variable":
+        if type == "variable":
             variables = get_variables()
             variable = [v for v in variables if v["name"] == name]
             if len(variable) == 0:

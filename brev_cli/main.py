@@ -3,6 +3,7 @@ from pyfiglet import Figlet
 import os
 from . import commands
 from . import endpoints
+from . import packages
 from . import helpers
 # def do_upgrade():
 #     print "Performing upgrade"
@@ -17,7 +18,6 @@ from . import helpers
 #     sub_cmd = ctx.command.commands[ctx.invoked_subcommand]
 #     if getattr(sub_cmd, "do_upgrade_check", True):
 #         do_upgrade()
-
 
 
 @click.group()
@@ -50,4 +50,7 @@ cli.add_command(commands.remove)
 cli.add_command(commands.logs)
 cli.add_command(commands.log)
 cli.add_command(commands.refresh)
+
+# Refactor
 cli.add_command(endpoints.endpoint)
+cli.add_command(packages.package)
