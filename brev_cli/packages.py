@@ -16,6 +16,40 @@ import urllib.parse as urlparse
 from yaspin import yaspin
 from yaspin.spinners import Spinners
 
+class GetOptionsFromType(click.Argument):
+    def __init__(self, *args, **kwargs):
+        self.previous_argument = kwargs.pop("previous_argument")
+        assert self.previous_argument, "'previous_argument' parameter required"
+        super(GetOptionsFromType, self).__init__(*args, **kwargs)
+
+    def handle_parse_result(self, ctx, opts, args):
+        # if opts["opt"] == "add":
+            # self.type = click.Choice([p["name"] for p in helpers.get_packages()])
+        if opts["opt"] == "remove":
+            self.type = [p["name"] for p in helpers.get_packages()]
+        elif opts["opt"] == "endpoint":
+            self.type = click.Choice([e["name"] for e in helpers.get_endpoint_list()])
+            self.required = True  # this is used for logs, doesnt affect anything else
+        # Note: We don't support projects here yet
+
+        return super(GetOptionsFromType, self).handle_parse_result(ctx, opts, args)
+
+
+
+def packageWrapper():
+    try:
+        return [p["name"] for p in helpers.get_packages()]
+    except:
+        pass
+
+# @click.argument(
+#     "name", 
+#     nargs=1,
+#     required=True,
+#     cls=GetOptionsFromType,
+#     previous_argument="opt"
+# )
+
 @click.command(short_help="Add or remove a package.")
 @click.argument(
     "opt",

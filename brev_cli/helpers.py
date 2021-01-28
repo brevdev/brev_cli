@@ -873,12 +873,7 @@ def diff():
 # brev add
 def add(type,name):
     try:
-        if type == "package":
-            click.secho(f"Adding package {name}", fg="green")
-            spin.start()
-            response = add_package(name)
-            spin.stop()
-        elif type == "variable":
+        if type == "variable":
             value = click.prompt(f"Value for variable {name}?")
             click.secho(f"Adding variable {name}", fg="green")
             spin.start()

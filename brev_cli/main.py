@@ -3,6 +3,7 @@ from pyfiglet import Figlet
 import os
 from . import commands
 from . import endpoints
+from . import variables
 from . import packages
 from . import helpers
 # def do_upgrade():
@@ -38,19 +39,20 @@ def cli():
     #     raise click.Abort()
 
 
-cli.add_command(commands.init)
-cli.add_command(commands.add)
-cli.add_command(commands.list)
-cli.add_command(commands.diff)
-cli.add_command(commands.run)
-cli.add_command(commands.status)
-cli.add_command(commands.login)
-cli.add_command(commands.override)
-cli.add_command(commands.remove)
-cli.add_command(commands.logs)
-cli.add_command(commands.log)
-cli.add_command(commands.refresh)
+# cli.add_command(commands.init)
+# cli.add_command(commands.add)
+# cli.add_command(commands.list)
+# cli.add_command(commands.diff)
+# cli.add_command(commands.run)
+# cli.add_command(commands.status)
+# cli.add_command(commands.login)
+# cli.add_command(commands.override)
+# cli.add_command(commands.remove)
+# cli.add_command(commands.logs)
+# cli.add_command(commands.log)
+# cli.add_command(commands.refresh)
 
 # Refactor
 cli.add_command(endpoints.endpoint)
+cli.add_command(variables.env)
 cli.add_command(packages.package)
