@@ -23,14 +23,11 @@ class GetOptionsFromType(click.Argument):
         super(GetOptionsFromType, self).__init__(*args, **kwargs)
 
     def handle_parse_result(self, ctx, opts, args):
-        # if opts["opt"] == "add":
-            # self.type = click.Choice([p["name"] for p in helpers.get_packages()])
         if opts["opt"] == "remove":
-            self.type = [p["name"] for p in helpers.get_packages()]
-        elif opts["opt"] == "endpoint":
-            self.type = click.Choice([e["name"] for e in helpers.get_endpoint_list()])
-            self.required = True  # this is used for logs, doesnt affect anything else
-        # Note: We don't support projects here yet
+            self.type = click.Choice([p["name"] for p in helpers.get_packages()])
+        elif opts["opt"] == "add":
+            pass
+
 
         return super(GetOptionsFromType, self).handle_parse_result(ctx, opts, args)
 
@@ -42,13 +39,6 @@ def packageWrapper():
     except:
         pass
 
-# @click.argument(
-#     "name", 
-#     nargs=1,
-#     required=True,
-#     cls=GetOptionsFromType,
-#     previous_argument="opt"
-# )
 
 @click.command(short_help="Add or remove a package.")
 @click.argument(
@@ -58,7 +48,14 @@ def packageWrapper():
     required=True,
     autocompletion=helpers.get_env_vars,
 )
-@click.argument("name", nargs=1, required=True)
+@click.argument(
+    "name", 
+    nargs=1,
+    required=True,
+    cls=GetOptionsFromType,
+    previous_argument="opt"
+)
+
 def package(opt, name):
     '''
     Pip install a package to your remote environment.
