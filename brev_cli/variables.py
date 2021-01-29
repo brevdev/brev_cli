@@ -96,8 +96,6 @@ def remove(name):
         spinner.ok(f"Variable {name} removed successfully.")
         
 
-
-
 def create_variables_file(project_name, project_id, custom_dir=None):
     curr_dir = utilities.get_active_project_dir() if custom_dir==None else custom_dir
     variables = helpers.BrevAPI(config.api_url).get_variables(project_id)
@@ -129,3 +127,4 @@ def create_variables_file(project_name, project_id, custom_dir=None):
             f"\t~🥞/variables.py has been updated ",
             fg="bright_green",
         )
+

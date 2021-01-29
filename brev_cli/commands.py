@@ -207,56 +207,6 @@ def diff():
         return
     helpers.diff()
 
-@click.command(short_help="Add a package or variable")
-@click.argument(
-    "type",
-    type=click.Choice(["package", "variable"]),
-    nargs=1,
-    required=True,
-    autocompletion=helpers.get_env_vars,
-)
-@click.argument("name", nargs=1, required=True)
-def add(type, name):
-    """
-        Add a package or variable\n
-        \tTYPE: 'package' or 'variable'\n
-        \tname: package or variable name\n
-        \tex: \n
-        \t\tbrev add Arrow # pip installs Arrow to your project
-    """
-    if not validate_directory():
-        return
-    helpers.add(type, name)
-
-
-@click.command(short_help="Remove a package or variable")
-@click.argument(
-    "type",
-    type=click.Choice(["package", "variable"]),
-    nargs=1,
-    required=True,
-    autocompletion=helpers.get_env_vars,
-)
-@click.argument(
-    "name",
-    nargs=1,
-    required=True,
-    cls=GetOptionsFromType,
-    previous_argument=type,
-)
-def remove(type, name):
-    """
-        Remove a package, variable\n
-        \tTYPE: 'package', 'varaible'\n
-        \tname: package or variable name\n
-        \tex: \n
-        \t\tbrev remove Arrow # removes package Arrow from your project environment
-    """
-    if not validate_directory():
-        return
-    helpers.remove(type,name)
-
-
 @click.command(short_help="Also View Project Logs (sometimes people add an 's')")
 def logs():
     """
@@ -287,3 +237,4 @@ def refresh():
     if not validate_directory():
         return
     helpers.refresh()
+

@@ -870,40 +870,6 @@ def diff():
     if unchanged:
         click.secho(f"No changes. You're synced with remote.", fg="bright_green")
 
-# brev add
-def add(type,name):
-    try:
-        if type == "variable":
-            value = click.prompt(f"Value for variable {name}?")
-            click.secho(f"Adding variable {name}", fg="green")
-            spin.start()
-            response = add_variable(name, value)
-            create_variables_file(get_active_project()['name'],get_active_project()['id'])
-            spin.stop()
-        click.secho(f"{type} {name} added successfully.", fg="bright_green")
-    except:
-        # print(sys.exc_info())
-        spin.stop()
-        click.secho(f"An error occured adding {type} {name}.", fg="bright_red")
-
-def remove(type,name):
-    try:
-        spin.start()
-        if type == "variable":
-            variables = get_variables()
-            variable = [v for v in variables if v["name"] == name]
-            if len(variable) == 0:
-                click.secho(f"{type} {name} does not exist on your project. ", fg="red")
-                return
-            click.secho(f"Removing variable {name}", fg="green")
-            response = remove_variable(variable[0]["id"])
-            create_variables_file(get_active_project()['name'],get_active_project()['id'])
-        spin.stop()
-        click.secho(f"{type} {name} removed successfully.", fg="green")
-    except:
-        spin.stop()
-        click.secho(f"An error occured removing {type} {name}.", fg="red")
-
 
 def parse_log(log):
     date = log['timestamp'].split("T")[0]
