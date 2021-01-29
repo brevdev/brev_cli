@@ -131,22 +131,18 @@ def login():
         file.close()
 
 
-@click.command(short_help="override local or remote")
-@click.argument(
-    "location",
-    type=click.Choice(["remote", "local"]),
-    nargs=1,
-    required=False,
-    autocompletion=helpers.get_env_vars,
-)
-def override(location, entire_dir=False):
+@click.command(short_help="deploy your changes to remote")
+def push(entire_dir=False):
     if not validate_directory():
         return
+    helpers.push(entire_dir=entire_dir)
 
-    if location == "remote":
-        helpers.push(entire_dir=entire_dir)
-    elif location == "local":
-        helpers.pull(entire_dir=entire_dir)
+@click.command(short_help="pull changes to match remote")
+def pull(entire_dir=False):
+    if not validate_directory():
+        return
+    helpers.pull(entire_dir=entire_dir)
+
 
 @click.command(short_help="Check current environment settings")
 def status():

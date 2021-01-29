@@ -28,7 +28,6 @@ class GetOptionsFromType(click.Argument):
         elif opts["opt"] == "add":
             pass
 
-
         return super(GetOptionsFromType, self).handle_parse_result(ctx, opts, args)
 
 
@@ -67,14 +66,15 @@ def package(opt, name):
         brev package remove <package_name>
 
     '''
-    # if not utilities.validate_directory():
-    #     return
+    if not utilities.validate_directory():
+        return
 
     if opt == "add":
         add(name)
 
     elif opt == "remove":
         remove(name)
+
 
 
 def add(name):

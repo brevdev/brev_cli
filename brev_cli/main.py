@@ -39,18 +39,21 @@ def cli():
     #     raise click.Abort()
 
 
-# cli.add_command(commands.init)
-# cli.add_command(commands.add)
-# cli.add_command(commands.list)
-# cli.add_command(commands.diff)
-# cli.add_command(commands.run)
-# cli.add_command(commands.status)
-# cli.add_command(commands.login)
-# cli.add_command(commands.override)
+cli.add_command(commands.init)
+cli.add_command(commands.list)
+cli.add_command(commands.diff)
+cli.add_command(commands.status)
+cli.add_command(commands.login)
+cli.add_command(commands.logs)
+cli.add_command(commands.push)
+cli.add_command(commands.pull)
+
+
+# To Refactor
 # cli.add_command(commands.remove)
-# cli.add_command(commands.logs)
 # cli.add_command(commands.log)
 # cli.add_command(commands.refresh)
+# cli.add_command(commands.run)
 
 # Refactor
 cli.add_command(endpoints.endpoint)
