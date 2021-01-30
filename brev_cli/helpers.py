@@ -417,6 +417,26 @@ def print_response(response):
     )
     try:
         stdout = urlparse.unquote(headers['x-stdout'])
+        print(type(stdout))
+
+        stdout = stdout.split("\n")
+        stdout = [s for s in stdout if "[INFO]	202" not in s and len(s)>0]
+
+
+        # for s in stdout.split("\n"):
+        #     print(s)
+        #     print(len(s))
+        #     input()
+
+
+        stdout = "\n".join(stdout)
+        # for s in stdout:
+        #     if "[INFO]	202" in s:
+        #         print("erroneous output")
+        #     else: 
+        #         print(s)
+        #         input()
+        # stdout = [s for s in stdout if "[INFO]	202" in s]
         click.echo(
             click.style("\nStandard Out: \n", fg=msg_color) +
             f"{stdout}"
@@ -615,113 +635,6 @@ def status():
     else:
         click.echo("no installed packages")
 
-# brev run
-def run(endpoint,httptype,body,args,stale):
-    curr_dir = get_active_project_dir()
-    endpoint_url = get_endpoint_list()
-    ep = [ep for ep in endpoint_url if ep["name"] == endpoint][0]
-    
-    url = f"{get_active_project()['domain']}{ep['uri']}"
-    args_dict = {}
-    for arg in args:
-        splitArg = arg.split("=")
-        args_dict[splitArg[0]] = splitArg[1]
-    if len(urlparse.urlencode(args_dict)) > 0:
-        url = f"{url}?{urlparse.urlencode(args_dict)}"
-
-    try:
-        local_file = open(
-            f"{curr_dir}/{ep['name']}.py", "r"
-        )
-        local_code = local_file.read()
-        local_file.close()
-    except:
-        click.secho("The file doesn't exist locally. Proceeding to run from remote", fg="yellow")
-        stale = True
-
-    try:
-        module_file = open(
-            f"{curr_dir}/shared.py", "r"
-        )
-        shared_code = module_file.read()
-        module_file.close()
-    except:
-        click.secho("The file doesn't exist locally. Proceeding to run from remote", fg="yellow")
-        stale = True
-
-    if not stale == True: 
-        try:
-            spin.start()
-            click.secho("Updating endpoint/shared code before running remote ...")
-            agent.BrevAPI(config.api_url).update_endpoint(
-                code=local_code,
-                name=ep["name"],
-                project_id=ep["project_id"],
-                id=ep["id"],
-                methods=ep["methods"],
-                uri=ep["uri"],
-            )
-            click.echo("endpoint updated!")
-            # spin.stop()
-
-        except:
-            # spin.stop()
-            click.secho("Couldn't update endpoint.", fg="bright_red")
-
-        try:
-            # spin.start()
-            update_module(shared_code, get_active_project()['id'])
-            click.echo("shared code updated!")
-            spin.stop()
-        except:
-            click.secho("Couldn't update shared code.", fg="bright_red")
-
-
-    
-    if httptype == "GET":
-        if stale==True:
-            spin.start()
-        response = requests.get(url)
-        spin.stop()
-        click.echo(response) # if this isn't here, the pancake still shows
-        print_response(response)
-
-    elif httptype == "POST" or httptype == "PUT":
-        jsonBody = {}
-        if not body == None:
-            with open(body, "r") as f:
-                try:
-                    jsonBody = json.loads(f.read())
-                    f.close()
-                except:
-                    f.close()
-                    click.echo(
-                        click.style(f"The file ", fg="bright_red")
-                        + click.style(f"{body} ", fg="red")
-                        + click.style(f"is not valid json.", fg="bright_red")
-                    )
-                    return
-        if stale==True:
-            spin.start()
-        response = (
-            requests.post(url, json=jsonBody)
-            if httptype == "POST"
-            else requests.post(url, json=jsonBody)
-        )
-        spin.stop()
-        click.echo(response)
-        print_response(response)
-
-    elif httptype == "DELETE":
-        spin.start()
-        response = (
-            requests.delete(url, json=jsonBody)
-            if httptype == "POST"
-            else requests.post(url, json=jsonBody)
-        )
-        spin.stop()
-        click.echo(response)
-        print_response(response)
 
 # brev list
 def list(type):
