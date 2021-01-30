@@ -421,22 +421,8 @@ def print_response(response):
 
         stdout = stdout.split("\n")
         stdout = [s for s in stdout if "[INFO]	202" not in s and len(s)>0]
-
-
-        # for s in stdout.split("\n"):
-        #     print(s)
-        #     print(len(s))
-        #     input()
-
-
         stdout = "\n".join(stdout)
-        # for s in stdout:
-        #     if "[INFO]	202" in s:
-        #         print("erroneous output")
-        #     else: 
-        #         print(s)
-        #         input()
-        # stdout = [s for s in stdout if "[INFO]	202" in s]
+        # for s in stdouin stdout if "[INFO]	202" in s]
         click.echo(
             click.style("\nStandard Out: \n", fg=msg_color) +
             f"{stdout}"
