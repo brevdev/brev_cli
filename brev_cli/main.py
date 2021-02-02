@@ -53,7 +53,6 @@ cli.add_command(commands.pull)
 # cli.add_command(commands.remove)
 # cli.add_command(commands.log)
 # cli.add_command(commands.refresh)
-# cli.add_command(commands.run)
 
 # Refactor
 cli.add_command(endpoints.endpoint)

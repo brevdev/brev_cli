@@ -153,35 +153,6 @@ def status():
     except:
         helpers.not_in_brev_error_message()
 
-@click.command(short_help="run endpoints")
-@click.argument(
-    "endpoint",
-    type=click.Choice(localWrapper()),
-    nargs=1,
-    required=True,
-    autocompletion=helpers.get_env_vars,
-)
-@click.argument(
-    "httptype",
-    type=click.Choice(["GET", "POST", "PUT", "DELETE"]),
-    nargs=1,
-    required=True,
-    autocompletion=helpers.get_env_vars,
-)
-@click.option(
-    "--body",
-    "-b",
-    required=False,
-    cls=GetArgumentsFromRequestType,
-    previous_argument="httptype",
-)
-@click.option("--args", "-a", multiple=True)
-@click.option('--stale', '-s', is_flag=True, help="Do not update remote before running.")
-def run(endpoint, httptype, body, args, stale):
-    if not validate_directory():
-        return
-    helpers.run(endpoint,httptype,body,args,stale)
-
 
 @click.command(short_help="list projects, endpoints, or packages")
 @click.argument(
@@ -203,7 +174,7 @@ def diff():
         return
     helpers.diff()
 
-@click.command(short_help="Also View Project Logs (sometimes people add an 's')")
+@click.command(short_help="View Project Logs")
 def logs():
     """
        View Project Logs\n
@@ -211,22 +182,6 @@ def logs():
     if not validate_directory():
         return
     helpers.logs()
-
-@click.command(short_help="View Project Logs")
-def log():
-    """
-       View Project Logs
-    """
-    if not validate_directory():
-        return
-    helpers.logs()
-
-
-def rename():
-    pass
-
-def update_renamed():
-    helpers.get_endpoints(write=True)
 
 @click.command(short_help="Refresh Endpoints")
 def refresh():
