@@ -13,8 +13,9 @@ from .config import config
 from . import spinner
 from . import authentication
 import urllib.parse as urlparse
-
-
+from watchgod import awatch
+import asyncio
+from functools import wraps
 
 class GetOptionsFromType(click.Argument):
     def __init__(self, *args, **kwargs):
@@ -153,6 +154,39 @@ def status():
     except:
         helpers.not_in_brev_error_message()
 
+<<<<<<< HEAD
+=======
+@click.command(short_help="run endpoints")
+@click.argument(
+    "endpoint",
+    type=click.Choice(localWrapper()),
+    nargs=1,
+    required=True,
+    autocompletion=helpers.get_env_vars,
+)
+@click.argument(
+    "httptype",
+    type=click.Choice(["GET", "POST", "PUT", "DELETE"]),
+    nargs=1,
+    required=True,
+    autocompletion=helpers.get_env_vars,
+)
+@click.option(
+    "--body",
+    "-b",
+    required=False,
+    cls=GetArgumentsFromRequestType,
+    previous_argument="httptype",
+)
+@click.option("--args", "-a", multiple=True)
+@click.option('--stale', '-s', is_flag=True, help="Do not update remote before running.")
+def run(endpoint, httptype, body, args, stale):
+    
+    if not validate_directory():
+        return
+    helpers.run(endpoint,httptype,body,args,stale)
+
+>>>>>>> watch
 
 @click.command(short_help="list projects, endpoints, or packages")
 @click.argument(
@@ -189,3 +223,66 @@ def refresh():
         return
     helpers.refresh()
 
+def coro(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        return asyncio.run(f(*args, **kwargs))
+
+    return wrapper
+
+@click.command(short_help="start brev")
+@coro
+async def start():
+    
+        
+    # curr_dir = os.getcwd()
+    
+    # endpoints = helpers.get_endpoints(write=False, init=False, custom_dir=curr_dir)
+
+    # endpoint_paths = []
+
+    # for endpoint in endpoints:
+    #     endpoint_paths.append(curr_dir + "/" + endpoint["name"] + ".py")
+    #     os.environ[endpoint["name"]] = ""
+    # print(endpoint_paths)
+
+    active_file = open("/Users/josephyeh/.brev/active_projects.json")
+    active_projects = json.load(active_file)
+
+
+
+
+    
+    async for changes in watch_multiple(active_projects):
+        changed_file = changes.pop()[1] 
+        endpoint_path = "/".join(changed_file.split("/")[:-1])
+        endpoint = changed_file.split("/")[-1][:-3]
+        helpers.update_endpoint(endpoint_path, endpoint)
+        
+    
+    
+    # print("asdasdasd")
+    # while True:
+        
+        
+        
+    #     # stamp = os.stat(os.getcwd()+"/brev_cli/commands.py").st_mtime
+    #     # data = fd.read()
+    #     for i in range(len(endpoints)):
+    #         stamp = os.stat(endpoint_paths[i]).st_mtime
+    #         if str(stamp) != os.environ[endpoints[i]["name"]]:
+    #             print(endpoints[i]["name"])
+    #             os.environ[endpoints[i]["name"]] = str(stamp)
+    #             helpers.update(endpoints[i]["name"])
+    #     time.sleep(1)
+
+
+
+async def watch_multiple(paths):
+    watchers = [awatch(p) for p in paths]
+    while True:
+        done, pending = await asyncio.wait([w.__anext__() for w in watchers], return_when=asyncio.FIRST_COMPLETED)
+        for t in pending:
+            t.cancel()
+        for t in done:
+            yield t.result()

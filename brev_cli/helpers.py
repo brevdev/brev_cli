@@ -210,6 +210,13 @@ def get_endpoint_list():
         return [ep for ep in endpoints]
 
 
+def get_direct_endpoint_list(endpoint_path):
+
+    with open(f"{endpoint_path}/.brev/endpoints.json", "r") as myfile:
+        endpoints = json.loads(myfile.read())
+        myfile.close()
+        return [ep for ep in endpoints]
+
 def do_init(email, password):
     try:
         certs = BrevAPI(config.api_url).authenticate(email, password)
@@ -620,6 +627,129 @@ def status():
                 )
     else:
         click.echo("no installed packages")
+
+def update_endpoint(endpoint_path, endpoint_name, stale=False):     
+    curr_dir = endpoint_path
+  
+    endpoint_list = get_direct_endpoint_list(endpoint_path) 
+    ep = [ep for ep in endpoint_list if ep["name"] == endpoint_name][0]
+    print(curr_dir + "/shared.py")
+    # url = f"{get_active_project()['domain']}{ep['uri']}"
+    # args_dict = {}
+    # for arg in args:
+    #     splitArg = arg.split("=")
+    #     args_dict[splitArg[0]] = splitArg[1]
+    # if len(urlparse.urlencode(args_dict)) > 0:
+    #     url = f"{url}?{urlparse.urlencode(args_dict)}"
+
+    try:
+        local_file = open(
+            f"{curr_dir}/{endpoint_name}.py", "r"
+        )
+        local_code = local_file.read()
+        local_file.close()
+    except:
+        click.secho("The file doesn't exist locally. Proceeding to run from remote", fg="yellow")
+        stale = True
+
+    # try:
+    #     module_file = open(
+    #         f"{curr_dir}/shared.py", "r"
+    #     )
+    #     shared_code = module_file.read()
+    #     module_file.close()
+    # except:
+    #     click.secho("The file doesn't exist locally. Proceeding to run from remote", fg="yellow")
+    #     stale = True
+
+    if not stale == True: 
+        try:
+            
+            click.secho("Updating endpoint/shared code before running remote ...")
+            agent.BrevAPI(config.api_url).update_endpoint(
+                code=local_code,
+                name=ep["name"],
+                project_id=ep["project_id"],
+                id=ep["id"],
+                methods=ep["methods"],
+                uri=ep["uri"],
+            )
+            click.echo("endpoint updated!")
+            # spin.stop()
+
+        except:
+            # spin.stop()
+            click.secho("Couldn't update endpoint.", fg="bright_red")
+
+        # try:
+        #     # spin.start()
+        #     update_module(shared_code, get_active_project()['id'])
+        #     click.echo("shared code updated!")
+            
+        # except:
+        #     click.secho("Couldn't update shared code.", fg="bright_red")
+
+
+def update(endpoint, stale=False):
+    curr_dir = get_active_project_dir()
+    endpoint_url = get_endpoint_list()
+    ep = [ep for ep in endpoint_url if ep["name"] == endpoint][0]
+    print("asdas")
+    print(ep)
+    # url = f"{get_active_project()['domain']}{ep['uri']}"
+    # args_dict = {}
+    # for arg in args:
+    #     splitArg = arg.split("=")
+    #     args_dict[splitArg[0]] = splitArg[1]
+    # if len(urlparse.urlencode(args_dict)) > 0:
+    #     url = f"{url}?{urlparse.urlencode(args_dict)}"
+
+    try:
+        local_file = open(
+            f"{curr_dir}/{ep['name']}.py", "r"
+        )
+        local_code = local_file.read()
+        local_file.close()
+    except:
+        click.secho("The file doesn't exist locally. Proceeding to run from remote", fg="yellow")
+        stale = True
+
+    try:
+        module_file = open(
+            f"{curr_dir}/shared.py", "r"
+        )
+        shared_code = module_file.read()
+        module_file.close()
+    except:
+        click.secho("The file doesn't exist locally. Proceeding to run from remote", fg="yellow")
+        stale = True
+
+    if not stale == True: 
+        try:
+            
+            click.secho("Updating endpoint/shared code before running remote ...")
+            agent.BrevAPI(config.api_url).update_endpoint(
+                code=local_code,
+                name=ep["name"],
+                project_id=ep["project_id"],
+                id=ep["id"],
+                methods=ep["methods"],
+                uri=ep["uri"],
+            )
+            click.echo("endpoint updated!")
+            # spin.stop()
+
+        except:
+            # spin.stop()
+            click.secho("Couldn't update endpoint.", fg="bright_red")
+
+        try:
+            # spin.start()
+            update_module(shared_code, get_active_project()['id'])
+            click.echo("shared code updated!")
+            
+        except:
+            click.secho("Couldn't update shared code.", fg="bright_red")
 
 
 # brev list
