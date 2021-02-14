@@ -39,6 +39,19 @@ class GetOptionsFromType(click.Argument):
             pass
 
         return super(GetOptionsFromType, self).handle_parse_result(ctx, opts, args)
+class GetHTTPOptionIfRun(click.Argument):
+    def __init__(self, *args, **kwargs):
+        self.previous_argument = kwargs.pop("previous_argument")
+        assert self.previous_argument, "'previous_argument' parameter required"
+        super(GetHTTPOptionIfRun, self).__init__(*args, **kwargs)
+
+    def handle_parse_result(self, ctx, opts, args):
+        if opts["opt"] == "run":
+            self.required = True
+        else: 
+            self.required = False
+
+        return super(GetHTTPOptionIfRun, self).handle_parse_result(ctx, opts, args)
 
 class GetArgumentsFromRequestType(click.Option):
     def __init__(self, *args, **kwargs):
@@ -88,7 +101,9 @@ class GetArgumentsFromRequestType(click.Option):
     type=click.Choice(["GET", "POST", "PUT", "DELETE"]),
     nargs=1,
     required=True,
+    cls=GetHTTPOptionIfRun,
     autocompletion=helpers.get_env_vars,
+    previous_argument="opt"
 )
 @click.option(
     "--body",
