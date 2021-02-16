@@ -5,9 +5,11 @@ from functools import wraps
 import time
 import sys
 import threading
+import getpass
 
+user = getpass.getuser()
 
-sys.path.insert(1, '~/Desktop/brev/brev_cli/brev_cli')
+sys.path.insert(1, "/Users/" + user + "/Desktop/brev/brev_cli/brev_cli")
 
 
 import helpers
