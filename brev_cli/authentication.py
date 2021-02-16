@@ -18,7 +18,7 @@ import string
 import random
 import cotter
 
-from . import config
+import config
 
 logger = logging.getLogger("brev-cli")
 

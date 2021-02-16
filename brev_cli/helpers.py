@@ -4,15 +4,15 @@ from pyfiglet import Figlet
 import os
 import time, json, copy, yaml
 import requests
-from .config import config
-from . import agent
+from config import config
+import agent
 import difflib
 from getpass import getpass
 import sys, time, threading
 from pathlib import Path
-from . import authentication
+import authentication
 import urllib.parse as urlparse
-from . import spinner
+import spinner
 import subprocess
 
 root = os.path.expanduser("~")
@@ -661,7 +661,7 @@ def update_endpoint(endpoint_path, endpoint_name, stale=False):
     # except:
     #     click.secho("The file doesn't exist locally. Proceeding to run from remote", fg="yellow")
     #     stale = True
-
+   
     if not stale == True: 
         try:
             

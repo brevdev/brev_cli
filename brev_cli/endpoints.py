@@ -83,22 +83,22 @@ class GetArgumentsFromRequestType(click.Option):
     cls=GetOptionsFromType,
     previous_argument="opt"
 )
-@click.argument(
-    "httptype",
-    type=click.Choice(["GET", "POST", "PUT", "DELETE"]),
-    nargs=1,
-    required=True,
-    autocompletion=helpers.get_env_vars,
-)
-@click.option(
-    "--body",
-    "-b",
-    required=False,
-    cls=GetArgumentsFromRequestType,
-    previous_argument="httptype",
-)
-@click.option("--args", "-a", multiple=True)
-def endpoint(opt, name, httptype, body, args):
+# @click.argument(
+#     "httptype",
+#     type=click.Choice(["GET", "POST", "PUT", "DELETE"]),
+#     nargs=1,
+#     required=True,
+#     autocompletion=helpers.get_env_vars,
+# )
+# @click.option(
+#     "--body",
+#     "-b",
+#     required=False,
+#     cls=GetArgumentsFromRequestType,
+#     previous_argument="httptype",
+# )
+# @click.option("--args", "-a", multiple=True)
+def endpoint(opt, name):
     '''
     Create an endpoint:
         brev endpoint add <endpoint_name>

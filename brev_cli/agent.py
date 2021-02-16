@@ -1,3 +1,5 @@
+
+
 import requests
 from pathlib import Path
 import os
@@ -15,9 +17,9 @@ import typing
 import sys
 import subprocess
 
-from . import utils
-from .config import config
-from . import authentication
+import utils
+from config import config
+import authentication
 
 logger = logging.getLogger("brev-cli")
 
@@ -156,7 +158,7 @@ class BrevAPI:
 
     def get_modules(self):
         url = self.make_prefixed_domain(f"module")
-        
+
         resp = self.make_secure_request(self.requests.get, url)
 
         return resp.json()
