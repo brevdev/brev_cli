@@ -1,3 +1,0 @@
-[console_scripts]
-brev=brev_cli.main:cli
-
