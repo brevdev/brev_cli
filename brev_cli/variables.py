@@ -2,10 +2,15 @@ import click
 import subprocess
 from pyfiglet import Figlet
 import os
-import time, json, copy, yaml
+import time
+import json
+import copy
+import yaml
 import requests
 import difflib
-import sys, time, threading
+import sys
+import time
+import threading
 import requests
 from . import agent
 from . import helpers
@@ -16,6 +21,7 @@ import urllib.parse as urlparse
 from yaspin import yaspin
 from yaspin.spinners import Spinners
 
+
 class GetOptionsFromType(click.Argument):
     def __init__(self, *args, **kwargs):
         self.previous_argument = kwargs.pop("previous_argument")
@@ -23,22 +29,15 @@ class GetOptionsFromType(click.Argument):
         super(GetOptionsFromType, self).__init__(*args, **kwargs)
 
     def handle_parse_result(self, ctx, opts, args):
-        # if opts["opt"] == "add":
-            # self.type = click.Choice([p["name"] for p in helpers.get_packages()])
         if opts["opt"] == "remove":
-            self.type = [p["name"] for p in helpers.get_packages()]
-        elif opts["opt"] == "endpoint":
-            self.type = click.Choice([e["name"] for e in helpers.get_endpoint_list()])
-            self.required = True  # this is used for logs, doesnt affect anything else
-        # Note: We don't support projects here yet
+            self.type = click.Choice([p["name"] for p in helpers.get_variables()])
 
         return super(GetOptionsFromType, self).handle_parse_result(ctx, opts, args)
 
 
-
 def packageWrapper():
     try:
-        return [p["name"] for p in helpers.get_packages()]
+        return [p["name"] for p in helpers.get_variables()]
     except:
         pass
 
@@ -51,7 +50,13 @@ def packageWrapper():
     required=True,
     autocompletion=helpers.get_env_vars,
 )
-@click.argument("env", nargs=1, required=True)
+@click.argument(
+    "env",
+    nargs=1,
+    required=True,
+    cls=GetOptionsFromType,
+    previous_argument="opt"
+)
 def env(opt, env):
     '''
     Add or remove an environment variable to your project.
@@ -78,9 +83,10 @@ def add(name):
     value = click.prompt(f"Value for variable {name}?")
     with yaspin(Spinners.aesthetic, text=f"Adding variable {name}", color="yellow") as spinner:
         response = helpers.add_variable(name, value)
-        create_variables_file(utilities.get_active_project()['name'], utilities.get_active_project()['id'])
-        spinner.text=""
-        spinner.ok(f"🥞 added package {name}")
+        create_variables_file(utilities.get_active_project()[
+                              'name'], utilities.get_active_project()['id'])
+        spinner.text = ""
+        spinner.ok(f"🥞 added variable {name}")
 
 
 def remove(name):
@@ -91,13 +97,14 @@ def remove(name):
             spinner.fail(f"Variable {name} does not exist on your project. ")
             return
         response = helpers.remove_variable(variable[0]["id"])
-        create_variables_file(helpers.get_active_project()['name'], helpers.get_active_project()['id'])
-        spinner.text=""
+        create_variables_file(helpers.get_active_project()[
+                              'name'], helpers.get_active_project()['id'])
+        spinner.text = ""
         spinner.ok(f"Variable {name} removed successfully.")
-        
+
 
 def create_variables_file(project_name, project_id, custom_dir=None):
-    curr_dir = utilities.get_active_project_dir() if custom_dir==None else custom_dir
+    curr_dir = utilities.get_active_project_dir() if custom_dir == None else custom_dir
     variables = helpers.BrevAPI(config.api_url).get_variables(project_id)
     variables = variables["variables"]
     file_contents = ""
@@ -114,17 +121,8 @@ def create_variables_file(project_name, project_id, custom_dir=None):
         with open(path, "w") as file:
             file.write(file_contents)
             file.close()
-        
-        click.secho(
-            f"\tCreated ~🥞/variables.py",
-            fg="bright_green",
-        )
+
     else:
         with open(path, "w") as file:
             file.write(file_contents)
             file.close()
-        click.secho(
-            f"\t~🥞/variables.py has been updated ",
-            fg="bright_green",
-        )
-
