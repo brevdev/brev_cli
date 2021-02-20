@@ -651,26 +651,22 @@ def list():
 
 
     pkgs = get_packages()
-    click.secho(f"Project :")
     installed = ""
     errored = ""
     pending = ""
     for pkg in pkgs:
         if pkg["status"] == "installed":
-            installed += f"{pkg['name']}=={pkg['version']} {pkg['home_page']}"
+            installed += f"\n\t\t{pkg['name']}=={pkg['version']} {pkg['home_page']}"
         elif pkg["status"] == "error":
-            errored += f"{pkg['name']}=={pkg['version']} {pkg['home_page']}"
+            errored += f"\n\t\t{pkg['name']}=={pkg['version']} {pkg['home_page']}"
         elif pkg["status"] == "pending":
-            pending += f"{pkg['name']}=={pkg['version']} {pkg['home_page']}"
+            pending += f"\n\t\t{pkg['name']}=={pkg['version']} {pkg['home_page']}"
     if len(installed) > 0:
-        click.secho("Installed Packages:")
-        click.secho(installed)
+        click.secho("\tInstalled Packages:" + installed)
     if len(errored) > 0:
-        click.secho("Errored Packages:")
-        click.secho(errored)
+        click.secho("\tErrored Packages:" + errored)
     if len(pending) > 0:
-        click.secho("Pending Packages:")
-        click.secho(pending)
+        click.secho("\tPending Packages:" + pending)
 
     click.secho("\n")
 
