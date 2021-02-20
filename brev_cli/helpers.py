@@ -623,56 +623,56 @@ def status():
 
 
 # brev list
-def list(type):
+def list():
     click.echo("\nYour Brev projects: ")
     for dir in get_all_project_dirs():
         click.echo(f"\t{dir}")
     click.echo("\n")
 
     curr_dir = get_active_project_dir()
-    if not type or type == "project" or type == "endpoint":
-        endpoints = get_endpoints(False)
-        project = get_active_project()
+    endpoints = get_endpoints(False)
+    project = get_active_project()
 
+    click.echo(
+        f"Current Project: " + click.style(f"{project['name']}", fg="green")
+    )
+    click.echo(
+        f"API docs: {project['domain']}/docs\n"
+    )
+    for endpoint in endpoints:
         click.echo(
-            f"Current Project: " + click.style(f"{project['name']}", fg="green")
+            f"\tEndpoint:\n\t\tname: {endpoint['name']}\n\t\tid: {endpoint['id']}" 
         )
         click.echo(
-            f"API docs: {project['domain']}/docs\n"
+            f"\t\tURL: "
+            + click.style(f"{project['domain']}{endpoint['uri']}", fg="green")
+            + f"\n"
         )
-        for endpoint in endpoints:
-            click.echo(
-                f"\tEndpoint:\n\t\tname: {endpoint['name']}\n\t\tid: {endpoint['id']}" 
-            )
-            click.echo(
-                f"\t\tURL: "
-                + click.style(f"{project['domain']}{endpoint['uri']}", fg="green")
-                + f"\n"
-            )
 
 
-    elif type == "package":
-        pkgs = get_packages()
-        click.secho(f"Project :")
-        installed = ""
-        errored = ""
-        pending = ""
-        for pkg in pkgs:
-            if pkg["status"] == "installed":
-                installed += f"{pkg['name']}=={pkg['version']} {pkg['home_page']}"
-            elif pkg["status"] == "error":
-                errored += f"{pkg['name']}=={pkg['version']} {pkg['home_page']}"
-            elif pkg["status"] == "pending":
-                pending += f"{pkg['name']}=={pkg['version']} {pkg['home_page']}"
-        if len(installed) > 0:
-            click.secho("Installed Packages:")
-            click.secho(installed)
-        if len(errored) > 0:
-            click.secho("Errored Packages:")
-            click.secho(errored)
-        if len(pending) > 0:
-            click.secho("Pending Packages:")
-            click.secho(pending)
+    pkgs = get_packages()
+    click.secho(f"Project :")
+    installed = ""
+    errored = ""
+    pending = ""
+    for pkg in pkgs:
+        if pkg["status"] == "installed":
+            installed += f"{pkg['name']}=={pkg['version']} {pkg['home_page']}"
+        elif pkg["status"] == "error":
+            errored += f"{pkg['name']}=={pkg['version']} {pkg['home_page']}"
+        elif pkg["status"] == "pending":
+            pending += f"{pkg['name']}=={pkg['version']} {pkg['home_page']}"
+    if len(installed) > 0:
+        click.secho("Installed Packages:")
+        click.secho(installed)
+    if len(errored) > 0:
+        click.secho("Errored Packages:")
+        click.secho(errored)
+    if len(pending) > 0:
+        click.secho("Pending Packages:")
+        click.secho(pending)
+
+    click.secho("\n")
 
 # brev diff
 def diff():

@@ -154,18 +154,11 @@ def status():
         helpers.not_in_brev_error_message()
 
 
-@click.command(short_help="list projects, endpoints, or packages")
-@click.argument(
-    "type",
-    type=click.Choice(["package", "project", "endpoint"]),
-    nargs=1,
-    required=False,
-    autocompletion=helpers.get_env_vars,
-)
-def list(type):
+@click.command(short_help="list endpoints and packages in your project")
+def list():
     if not validate_directory():
         return
-    helpers.list(type)
+    helpers.list()
 
 
 @click.command(short_help="View a diff of your current environment from remote")
