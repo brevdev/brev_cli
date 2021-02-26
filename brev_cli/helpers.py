@@ -14,6 +14,8 @@ from . import authentication
 import urllib.parse as urlparse
 from . import spinner
 import subprocess
+from yaspin import yaspin
+from yaspin.spinners import Spinners
 
 root = os.path.expanduser("~")
 showAnimation = True
@@ -609,14 +611,14 @@ def status():
         click.echo("Packages: ")
         for p in all_packages:
             if p["status"] == "installed":
-                click.echo(f"\t{p['name']} {p['status']} v{p['version']}")
+                click.echo(f"\t{p['name']}=={p['version']} {p['status']}")
             elif p["status"] == "error":
                 click.echo(
-                    click.style(f"\t{p['name']} {p['status']} v{p['version']}", fg="red")
+                    click.style(f"\t{p['name']}=={p['version']} {p['status']}", fg="red")
                 )
             elif p["status"] == "pending":
                 click.echo(
-                    click.style(f"\t{p['name']} {p['status']} v{p['version']}", fg="yellow")
+                    click.style(f"\t{p['name']}=={p['version']} {p['status']}", fg="yellow")
                 )
     else:
         click.echo("no installed packages")
@@ -624,27 +626,30 @@ def status():
 
 # brev list
 def list():
+
     click.echo("\nYour Brev projects: ")
     for dir in get_all_project_dirs():
         click.echo(f"\t{dir}")
     click.echo("\n")
 
-    curr_dir = get_active_project_dir()
-    endpoints = get_endpoints(False)
-    project = get_active_project()
+    with yaspin(Spinners.aesthetic, text=f"Getting active project info", color="yellow") as spinner:
+        curr_dir = get_active_project_dir()
+        endpoints = get_endpoints(False)
+        project = get_active_project()
+        spinner.ok(f"🥞 Done")
 
     click.echo(
-        f"Current Project: " + click.style(f"{project['name']}", fg="green")
+        f"\nCurrent Project: " + click.style(f"{project['name']}", fg="green")
     )
     click.echo(
         f"API docs: {project['domain']}/docs\n"
     )
     for endpoint in endpoints:
         click.echo(
-            f"\tEndpoint:\n\t\tname: {endpoint['name']}\n\t\tid: {endpoint['id']}" 
+            f"\tEndpoint: {endpoint['name']}" 
         )
         click.echo(
-            f"\t\tURL: "
+            f"\t"
             + click.style(f"{project['domain']}{endpoint['uri']}", fg="green")
             + f"\n"
         )
@@ -656,11 +661,11 @@ def list():
     pending = ""
     for pkg in pkgs:
         if pkg["status"] == "installed":
-            installed += f"\n\t\t{pkg['name']}=={pkg['version']} {pkg['home_page']}"
+            installed += f"\n\t{pkg['name']}=={pkg['version']} {pkg['home_page']}"
         elif pkg["status"] == "error":
-            errored += f"\n\t\t{pkg['name']}=={pkg['version']} {pkg['home_page']}"
+            errored += f"\n\t{pkg['name']}=={pkg['version']} {pkg['home_page']}"
         elif pkg["status"] == "pending":
-            pending += f"\n\t\t{pkg['name']}=={pkg['version']} {pkg['home_page']}"
+            pending += f"\n\t{pkg['name']}=={pkg['version']} {pkg['home_page']}"
     if len(installed) > 0:
         click.secho("\tInstalled Packages:" + installed)
     if len(errored) > 0:
